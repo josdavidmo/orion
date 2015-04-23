@@ -1,0 +1,31 @@
+<?php
+define('REGISTRO_INVERSION_AGREGADA', 'El Registro de la Inversión fue agregado con éxito.');
+define('ERROR_ADD_REGISTRO_INVERSION', 'Error al agregar.');
+define('REGISTRO_INVERSION_BORRADO', 'El Registro de la Inversión fue borrado con éxito');
+define('ERROR_DE_REGISTRO_INVERSION', 'Error al borrar.');
+define('ERROR_DE_REGISTRO_INVERSION_EDIT', 'Error al actualizar los datos.');
+define('REGISTRO_INVERSION_EDITADO', 'El Registro de la Inversión fue editado con éxito');
+define('TABLA_REGISTRO_INVERSION', 'Registro de la Inversión');
+define('TITULO_AGREGAR_REGISTRO_INVERSION', 'Agregar Registro de la Inversión');
+define('TITULO_EDITAR_REGISTRO_INVERSION', 'Editar Registro de la Inversión');
+define('REGISTRO_INVERSION_ACTIVIDAD', 'Actividad');
+define('REGISTRO_INVERSION_FECHA', 'Fecha');
+define('REGISTRO_INVERSION_PROVEEDOR', 'Proveedor');
+define('REGISTRO_INVERSION_NUMERO_DOCUMENTO', 'Número Documento');
+define('REGISTRO_INVERSION_VALOR', 'Valor Factura');
+define('REGISTRO_INVERSION_OBSERVACIONES', 'Observaciones');
+define('REGISTRO_INVERSION_DOCUMENTO_SOPORTE', 'Documento Soporte');
+define('REGISTRO_INVERSION_FECHA_INICIO', 'Fecha Inicio');
+define('REGISTRO_INVERSION_FECHA_FIN', 'Fecha Fin');
+define('REGISTRO_INVERSION_EXPORTAR', 'Exportar');
+define('REGISTRO_INVERSION_MSG_BORRADO', 'Esta seguro que desea eliminar este registro de inversión');
+define('ERROR_EDIT_REGISTRO_INVERSION', 'Error al editar el registro de inversión');
+define('ERROR_REGISTRO_INVERSION_ACTIVIDAD', 'Seleccione una actividad');
+define('ERROR_REGISTRO_INVERSION_FECHA', '**Digite una fecha');
+define('ERROR_REGISTRO_INVERSION_PROVEEDOR', 'Seleccione un proveedor');
+define('ERROR_REGISTRO_INVERSION_NUMERO_DOCUMENTO', '**Digite el numero del documento');
+define('ERROR_REGISTRO_INVERSION_VALOR', '**Digite el valor de la actividad');
+define('ERROR_REGISTRO_INVERSION_OBSERVACIONES', '**Digite una observación.');
+define('ERROR_REGISTRO_INVERSION_DOCUMENTO_SOPORTE', '**Selecciones un documento de soporte');
+define('REGISTRO_INVERSION_REPORTE_EXCEL', 'Reporte Registro de Inversión');
+?>
