@@ -96,17 +96,28 @@ switch ($task) {
      * objetos usuarios según los parámetros de entrada
      */
     case 'list':
+        $nombre = $_REQUEST['txt_nombre'];
+        $criterio = "1";
+        if ($nombre != NULL) {
+            $criterio .= " AND CONCAT(usu_nombre,' ',usu_apellido) LIKE '%" . $nombre . "%'";
+        }
+
         $form = new CHtmlForm();
         $form->setTitle(TITULO_PLANEACION_AUTOCONTROL);
         $form->setMethod('post');
-        $form->setOptions('autoClean', false);
+        $form->setAction('?mod=' . $modulo . '&niv=' . $niv);
+        $form->setId('form_filtro');
+        $form->addEtiqueta(USUARIO_NOMBRE);
+        $form->addInputText('text', 'txt_nombre', 'txt_nombre', '19', '19', $nombre, '', ' pattern="' . PATTERN_ALFANUMERICO . '" title="' . $html->traducirTildes(TITLE_ALFANUMERICO) . '"');
+        $form->addInputButton('submit', 'btn_enviar', 'btn_enviar', BTN_ACEPTAR, 'button', '');
         $form->addInputButton('button', 'exportC', 'exportC', BTN_EXPORTAR_CONTROL, 'button', 'onclick=location.href=\'modulos/interventoria/control_excel.php\'');
         $form->addInputButton('button', 'exportA', 'exportA', BTN_EXPORTAR_AUTOCONTROL, 'button', 'onclick=location.href=\'modulos/hseq/planAccion_excel.php?idFuente=' . $idFuente . '&periodo=' . $periodo . '&estado=' . $estado . '\'');
         $form->writeForm();
+        
         $dt = new CHtmlDataTable();
         $dt->setTitleTable(TITULO_PLANEACION_AUTOCONTROL);
         $titulos = array(USUARIO_NOMBRE, USUARIO_DOCUMENTO, USUARIO_CORREO);
-        $usuarios = $daoUsuarios->getInformacionBasicaPersonal("1", "usu_nombre");
+        $usuarios = $daoUsuarios->getInformacionBasicaPersonal($criterio, "usu_nombre");
         $dt->setTitleRow($titulos);
         $dt->setDataRows($usuarios);
         $dt->setSeeLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=seePersonal");

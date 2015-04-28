@@ -207,15 +207,14 @@ Class CUserData {
         }
         return $users;
     }
-    
+
     function getInformacionBasicaPersonal($criterio, $orden) {
         $users = null;
         $sql = "SELECT usu_id, "
-                    . "CONCAT(usu_nombre,' ',usu_apellido) as nombreUsuario, "
-                    . "usu_documento, usu_correo_corporativo "
+                . "CONCAT(usu_nombre,' ',usu_apellido) as nombreUsuario, "
+                . "usu_documento, usu_correo_corporativo "
                 . "FROM usuario "
                 . "WHERE " . $criterio . " and usu_estado = 1 order by " . $orden;
-        echo $sql;
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             $cont = 0;

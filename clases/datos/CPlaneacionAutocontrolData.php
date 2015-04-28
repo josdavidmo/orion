@@ -171,13 +171,15 @@ class CPlaneacionAutocontrolData {
      */
     public function getObservacionesByIdAutocontrol($idAutocontrol) {
         $observaciones = null;
-        $sql = "SELECT o.idObservacionAutocontrol, DATE_FORMAT(o.periodo, '%b-%y'), "
+        $sql = "SELECT o.idObservacionAutocontrol, "
+                . "DATE_FORMAT(o.periodo, '%b-%y') as periodo, "
                 . "o.descripcion, t.descripcion as estado "
                 . "FROM observacionautocontrol o, tipoobservacion t "
                 . "WHERE o.idAutocontrol = " . $idAutocontrol . " AND "
-                . "o.estado = t.idtipoObservacion";
+                . "o.estado = t.idtipoObservacion ORDER BY o.periodo ASC";
+        echo sql;
         $r = $this->db->ejecutarConsulta($sql);
-        if ($r) {
+        if ($r) {   
             $cont = 0;
             while ($w = mysql_fetch_array($r)) {
                 $observaciones[$cont]['idObservacionAutocontrol'] = $w['idObservacionAutocontrol'];
@@ -197,11 +199,12 @@ class CPlaneacionAutocontrolData {
      */
     public function getObservacionesByIdControl($idControl) {
         $observaciones = null;
-        $sql = "SELECT o.idObservacionAutocontrol, DATE_FORMAT(o.periodo, '%b-%y') as periodo, "
+        $sql = "SELECT o.idObservacionAutocontrol, "
+                . "DATE_FORMAT(o.periodo, '%b-%y') as periodo, "
                 . "o.descripcion, t.descripcion as estado "
                 . "FROM observacionautocontrol o, tipoobservacion t "
                 . "WHERE o.idControl = " . $idControl . " AND "
-                . "o.estado = t.idtipoObservacion";
+                . "o.estado = t.idtipoObservacion ORDER BY o.periodo ASC";
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             $cont = 0;

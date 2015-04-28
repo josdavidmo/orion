@@ -30,10 +30,16 @@ $titulos = array(CONTROL_OBLIGACIONES,
                  CONTROL_METODOLOGIA,
                  CONTROL_REGISTRO);
 
+$fechaCantidad = $daoControl->getFechaAndCantidad();
+$fechaInicio = $fechaCantidad['fechaMinima'];
+$periodo = explode("-", $fechaInicio);
+$cantidad = (int) $fechaCantidad['meses'];
+$ancho = $cantidad*2 + 8;
+
 echo "<table width='80%' border='1' align='center'>";
 //encabezado
-echo"<tr><th colspan = '18'><center></center></th></tr>";
-echo"<tr><th colspan = '18' bgcolor='#CCCCCC'><center>" . $html->traducirTildes(REPORTE_CONTROL) . "</center></th></tr>";
+echo"<tr><th colspan = '$ancho'><center></center></th></tr>";
+echo"<tr><th colspan = '$ancho' bgcolor='#CCCCCC'><center>" . $html->traducirTildes(REPORTE_CONTROL) . "</center></th></tr>";
 
 //titulos
 echo "<tr>";
@@ -41,16 +47,10 @@ echo "<th>" . $html->traducirTildes('No') . "</th>";
 foreach ($titulos as $titulo) {
     echo "<th>" . $html->traducirTildes($titulo) . "</th>";
 }
-$fechaCantidad = $daoControl->getFechaAndCantidad();
-$fechaInicio = $fechaCantidad['fechaMinima'];
-$periodo = explode("-", $fechaInicio);
-$cantidad = $fechaCantidad['meses'];
-$contador = 0;
-while($contador < $cantidad){
-    $fecha = mktime(0, 0, 0, $periodo[1] + $contador, $periodo[2], $periodo[0] + 1);
+for ($i = 0; $i < $cantidad; $i++) {
+    $fecha = mktime(0, 0, 0, $periodo[1] + ($i+1), $periodo[2], $periodo[0]);
     echo "<th>" . $html->traducirTildes(date("Y-m", $fecha)) . "</th>";
     echo "<th>" . $html->traducirTildes(ESTADO_CONTROL) . "</th>";
-    $contador++;
 }
 echo "</tr>";
 
@@ -63,7 +63,7 @@ while ($contador < $cont) {
     $idControl = $controles[$contador]['idPlaneacionControl'];
     $observaciones = $daoControl->getObservacionesByIdControl($idControl);
     echo "<tr>";
-    echo "<td>" . $contador . "</td> 
+    echo "<td>" . ($contador + 1) . "</td> 
         <td>" . $html->traducirTildes($controles[$contador]['obligaciones']) . "</td>
         <td>" . $html->traducirTildes($controles[$contador]['verificacion']) . "</td>
         <td>" . $html->traducirTildes($controles[$contador]['numeroDocumentoContractual']) . "</td>

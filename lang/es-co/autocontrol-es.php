@@ -85,5 +85,14 @@ define('EXITO_BORRAR_AUTOCONTROL_OBSERVACIONES', 'La Observación ha sido borrad
 define('ERROR_EDITAR_AUTOCONTROL_OBSERVACIONES', 'Ocurrio un error al editar la Observación');
 define('EXITO_EDITAR_AUTOCONTROL_OBSERVACIONES', 'La Observación ha sido editada con éxito');
 
+define('BTN_EXPORTAR_CONTROL','Exp. Control');
+define('BTN_EXPORTAR_AUTOCONTROL','Exp. Autocont.');
+
+define('ESTADO_CONTROL','Estado');
+define('CONTROL_RESPONSABLE','Responsable');
+define('CONTROL_CRITERIOS_ACEPTACION', 'Criterios Aceptación');
+define('CONTROL_METODOLOGIA', 'Metodologáa');
+define('CONTROL_REGISTRO', 'Registro');
+define('REPORTE_CONTROL', 'Reporte Control');
 ?>
 
