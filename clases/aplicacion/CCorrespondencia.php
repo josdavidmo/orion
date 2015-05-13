@@ -265,7 +265,7 @@ class CCorrespondencia {
      /**
      * * almacena un objeto DOCUMENTO y retorna un mensaje del resultado del proceso
      * */
-    function saveNewCorrespondencia($archivo1,$archivo2){
+    function saveNewCorrespondencia($archivo1,$archivo2,$copia){
         $r = "";
         if($this->dd->getCountByReferencia($this->codigoReferencia)==0){
             
@@ -386,7 +386,7 @@ class CCorrespondencia {
                                     $this->fechaMaxRepuesta, $this->documentoAnexo, 
                                     $this->codigoReferencia, $this->fechaRespondido, 
                                     $this->documentoRespuesta, $this->estado,
-                                    $this->operador);
+                                    $this->operador,$copia);
 
                             if ($i == "true") {
                                 $r = DOCUMENTO_AGREGADO;

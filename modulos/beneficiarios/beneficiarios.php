@@ -220,7 +220,7 @@ switch ($task) {
             FECHA_INICIO_BENEFICIARIO,
             ESTADO_BENEFICIARIO,
             GRUPO_BENEFICIARIO,
-            TIPO_BENEFICIARIO);
+            TIPO_BENEFICIARIO, OBSERVACION_BENEFICIARIO);
         $beneficiarios = $daoBeneficiarios->getBeneficiariosByTipo($tipoPagina, $condicion);
         $dt->setTitleRow($titulos);
         $dt->setDataRows($beneficiarios);
@@ -348,6 +348,9 @@ switch ($task) {
             }
         }
 
+		$form->addEtiqueta(OBSERVACION_BENEFICIARIO);
+        $form->addTextArea('textarea', 'txt_observaciones', 'txt_observaciones', 100, 5, '', '', ' title="' . $html->traducirTildes(TITLE_ALFANUMERICO) . '"');
+		
         $form->addEtiqueta(DDA_BENEFICIARIO);
         $form->addSelect('select', 'sel_dda', 'sel_dda', $opciones, '', '', '', ' required');
 
@@ -421,10 +424,11 @@ switch ($task) {
         $fechaInicio = $_REQUEST['txt_fecha_inicio'];
         $meta = $_REQUEST['sel_meta'];
         $estado = $_REQUEST['sel_estado'];
+		$observaciones = $_REQUEST ['txt_observaciones'];
         $dda = $_REQUEST['sel_dda'];
         $grupo = $_REQUEST['sel_grupo'];
         $tipo = $_REQUEST['sel_tipo'];
-        $beneficiario = new CBeneficiario($idBeneficiario, $codigoInterventoria, $codigoMintic, $codigoOperador, $nombre, $msnm, $latitudGrados, $latitudMinutos, $latitudSegundos, $south, $longitudGrados, $longitudMinutos, $longitudSegundos, $west, $fechaInicio, $meta, $estado, $dda, $grupo, $centroPoblado, $tipo);
+        $beneficiario = new CBeneficiario($idBeneficiario, $codigoInterventoria, $codigoMintic, $codigoOperador, $nombre, $msnm, $latitudGrados, $latitudMinutos, $latitudSegundos, $south, $longitudGrados, $longitudMinutos, $longitudSegundos, $west, $fechaInicio, $meta, $estado, $observaciones, $dda, $grupo, $centroPoblado, $tipo);
 
         $r = $daoBeneficiarios->insertBeneficiario($beneficiario);
         $m = ERROR_AGREGAR_BENEFICIARIOS;
@@ -574,6 +578,9 @@ switch ($task) {
             }
         }
 
+		$form->addEtiqueta(OBSERVACION_BENEFICIARIO);
+        $form->addTextArea('textarea', 'txt_observaciones', 'txt_observaciones', 100, 5, $beneficiario->getObservaciones(), '', ' title="' . $html->traducirTildes(TITLE_ALFANUMERICO) . '"');
+		
         $form->addEtiqueta(DDA_BENEFICIARIO);
         $form->addSelect('select', 'sel_dda', 'sel_dda', $opciones, '', $beneficiario->getDda(), '', ' required');
 
@@ -649,10 +656,11 @@ switch ($task) {
         $fechaInicio = $_REQUEST['txt_fecha_inicio'];
         $meta = $_REQUEST['sel_meta'];
         $estado = $_REQUEST['sel_estado'];
+		$observaciones = $_REQUEST['txt_observaciones'];
         $dda = $_REQUEST['sel_dda'];
         $grupo = $_REQUEST['sel_grupo'];
         $tipo = $_REQUEST['sel_tipo'];
-        $beneficiario = new CBeneficiario($idBeneficiario, $codigoInterventoria, $codigoMintic, $codigoOperador, $nombre, $msnm, $latitudGrados, $latitudMinutos, $latitudSegundos, $south, $longitudGrados, $longitudMinutos, $longitudSegundos, $west, $fechaInicio, $meta, $estado, $dda, $grupo, $centroPoblado, $tipo);
+        $beneficiario = new CBeneficiario($idBeneficiario, $codigoInterventoria, $codigoMintic, $codigoOperador, $nombre, $msnm, $latitudGrados, $latitudMinutos, $latitudSegundos, $south, $longitudGrados, $longitudMinutos, $longitudSegundos, $west, $fechaInicio, $meta, $estado, $observaciones, $dda, $grupo, $centroPoblado, $tipo);
         $r = $daoBeneficiarios->updateBeneficiario($beneficiario);
         $m = ERROR_EDITAR_BENEFICIARIOS;
         if ($r == 'true') {

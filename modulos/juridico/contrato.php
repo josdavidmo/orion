@@ -41,8 +41,9 @@ switch ($task) {
         $dt = new CHtmlDataTable();
         $dt->setTitleTable(TITULO_CONTRATOS);
         $titulos = array(CONTRATO_NUMERO, CONTRATO_OBJETO,
-            CONTRATO_VALOR, CONTRATO_SUMA_ORDENES, CONTRATO_NUMERO_ORDENES, 
-            CONTRATO_PLAZO, CONTRATO_FECHA_INICIO, CONTRATO_FECHA_FIN, 
+            CONTRATO_VALOR, CONTRATO_ANTICIPO, CONTRATO_AMORTIZACION, 
+			CONTRATO_POR_AMORTIZAR, CONTRATO_SUMA_ORDENES, CONTRATO_POR_EJECUTAR, 
+			CONTRATO_NUMERO_ORDENES, CONTRATO_PLAZO, CONTRATO_FECHA_INICIO, CONTRATO_FECHA_FIN, 
             CONTRATO_SOPORTE, CONTRATO_MONEDA, CONTRATO_ESTADO);
         $contratos = $daoContrato->getContratos();
         $dt->setTitleRow($titulos);
@@ -76,6 +77,9 @@ switch ($task) {
 
         $form->addEtiqueta(CONTRATO_VALOR);
         $form->addInputText('text', 'txt_valor', 'txt_valor', '50', '50', '', '', 'pattern="' . PATTERN_NUMEROS . '" title="' . $html->traducirTildes(TITLE_NUMEROS) . '" onkeyup="formatearNumero(this);" required');
+		
+		$form->addEtiqueta(CONTRATO_ANTICIPO);
+        $form->addInputText('text', 'txt_anticipo', 'txt_anticipo', '50', '50', '', '', 'pattern="' . PATTERN_NUMEROS . '" title="' . $html->traducirTildes(TITLE_NUMEROS) . '" onkeyup="formatearNumero(this);" required');
 
         $form->addEtiqueta(CONTRATO_PLAZO);
         $form->addInputText('text', 'txt_plazo', 'txt_plazo', '50', '50', '', '', 'pattern="' . PATTERN_ALFANUMERICO . '" title="' . $html->traducirTildes(TITLE_ALFANUMERICO) . '" required');
@@ -115,13 +119,14 @@ switch ($task) {
         $numero = $_REQUEST['txt_numero'];
         $objeto = $_REQUEST['txt_objeto'];
         $valor = str_replace(",", ".", str_replace(".", "", $_REQUEST['txt_valor']));
+		$anticipo = str_replace(",", ".", str_replace(".", "", $_REQUEST['txt_anticipo']));
         $plazo = $_REQUEST['txt_plazo'];
         $fechaInicio = $_REQUEST['txt_fecha_inicio'];
         $fechaFin = $_REQUEST['txt_fecha_limite'];
         $soporte = $_FILES['file_soporte'];
         $moneda = $_REQUEST['sel_moneda'];
 
-        $contrato = new CContrato(NULL, $numero, $objeto, $valor, $plazo, $fechaInicio, $fechaFin, $soporte, $moneda);
+        $contrato = new CContrato(NULL, $numero, $objeto, $valor, $anticipo, $plazo, $fechaInicio, $fechaFin, $soporte, $moneda);
 
         $r = $daoContrato->insertContrato($contrato);
         $m = ERROR_AGREGAR_CONTRATO;
@@ -162,7 +167,7 @@ switch ($task) {
     case 'edit':
         $id_edit = $_REQUEST['id_element'];
         $contrato = $daoContrato->getContratoById($id_edit);
-        $form = new CHtmlForm();
+		$form = new CHtmlForm();
         $form->setTitle(TITULO_EDITAR_CONTRATO);
         $form->setId('frm_add_contrato_accion');
         $form->setAction('?mod=' . $modulo . '&niv=1&task=saveEdit&id_element=' . $id_edit);
@@ -177,6 +182,9 @@ switch ($task) {
         $form->addEtiqueta(CONTRATO_VALOR);
         $form->addInputText('text', 'txt_valor', 'txt_valor', '50', '50', $contrato->getValor(), '', 'pattern="' . PATTERN_NUMEROS . '" title="' . $html->traducirTildes(TITLE_NUMEROS) . '" onkeyup="formatearNumero(this);" required');
 
+		$form->addEtiqueta(CONTRATO_ANTICIPO);
+        $form->addInputText('text', 'txt_anticipo', 'txt_anticipo', '50', '50', $contrato->getAnticipo(), '', 'pattern="' . PATTERN_NUMEROS . '" title="' . $html->traducirTildes(TITLE_NUMEROS) . '" onkeyup="formatearNumero(this);" required');
+		
         $form->addEtiqueta(CONTRATO_PLAZO);
         $form->addInputText('text', 'txt_plazo', 'txt_plazo', '50', '50', $contrato->getPlazo(), '', 'pattern="' . PATTERN_ALFANUMERICO . '" title="' . $html->traducirTildes(TITLE_ALFANUMERICO) . '" required');
 
@@ -217,13 +225,14 @@ switch ($task) {
         $numero = $_REQUEST['txt_numero'];
         $objeto = $_REQUEST['txt_objeto'];
         $valor = str_replace(",", ".", str_replace(".", "", $_REQUEST['txt_valor']));
-        $plazo = $_REQUEST['txt_plazo'];
+        $anticipo = str_replace(",", ".", str_replace(".", "", $_REQUEST['txt_anticipo']));
+		$plazo = $_REQUEST['txt_plazo'];
         $fechaInicio = $_REQUEST['txt_fecha_inicio'];
         $fechaFin = $_REQUEST['txt_fecha_limite'];
         $soporte = $_FILES['file_soporte'];
         $moneda = $_REQUEST['sel_moneda'];
 
-        $contrato = new CContrato($idContrato, $numero, $objeto, $valor, $plazo, $fechaInicio, $fechaFin, $soporte, $moneda);
+        $contrato = new CContrato($idContrato, $numero, $objeto, $valor, $anticipo, $plazo, $fechaInicio, $fechaFin, $soporte, $moneda);
 
         $r = $daoContrato->updateContrato($contrato);
         $m = ERROR_EDITAR_CONTRATO;
@@ -275,7 +284,7 @@ switch ($task) {
         $form->setMethod('post');
 
         $form->addEtiqueta(OTRO_SI_DESCRIPCION);
-        $form->addTextArea('textarea', 'txt_descripcion', 'txt_descripcion', 100, 5, '', '', ' title="' . $html->traducirTildes(TITLE_ALFANUMERICO) . '" required');
+        $form->addTextArea('textarea', 'txt_descripcion', 'txt_descripcion', 100, 5, '', '', ' title="' . $html->traducirTildes(TITLE_ALFANUMERICO) . '"');
 
         $form->addEtiqueta(OTRO_SI_VALOR);
         $form->addInputText('text', 'txt_valor', 'txt_valor', '50', '50', '', '', 'pattern="' . PATTERN_NUMEROS . '" title="' . $html->traducirTildes(TITLE_NUMEROS) . '" onkeyup="formatearNumero(this);" ');
@@ -354,7 +363,7 @@ switch ($task) {
         $form->setMethod('post');
 
         $form->addEtiqueta(OTRO_SI_DESCRIPCION);
-        $form->addTextArea('textarea', 'txt_descripcion', 'txt_descripcion', 100, 5, $otroSi->getDescripcion(), '', ' title="' . $html->traducirTildes(TITLE_ALFANUMERICO) . '" required');
+        $form->addTextArea('textarea', 'txt_descripcion', 'txt_descripcion', 100, 5, $otroSi->getDescripcion(), '', ' title="' . $html->traducirTildes(TITLE_ALFANUMERICO) . '"');
 
         $form->addEtiqueta(OTRO_SI_VALOR);
         $form->addInputText('text', 'txt_valor', 'txt_valor', '50', '50', $otroSi->getValor(), '', 'pattern="' . PATTERN_NUMEROS . '" title="' . $html->traducirTildes(TITLE_NUMEROS) . '" onkeyup="formatearNumero(this);" ');

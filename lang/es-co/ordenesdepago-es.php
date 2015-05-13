@@ -84,5 +84,6 @@ define('NUMERO_PROVEEDOR','Número de Factura / Documento');
 define('ERROR_PROVEEDOR','Ingrese un número válido');
 define('NUMERO_CUENTA_COBRO','Número Documento Soporte UT');
 define('CONTRATO_POLIZA', 'Contrato');
+define('AMORTIZACION_ORDEN', 'Amortización');
 ?>
         

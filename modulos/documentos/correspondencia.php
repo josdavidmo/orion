@@ -520,6 +520,8 @@ switch ($task) {
         //$form->addInputText('hidden', 'txt_tiene_documento_respuesta', 'txt_tiene_documento_respuesta', '', '', $tieneDocumentoRespuesta, '', '');
         $form->addInputText('hidden', 'txt_requiere_documento_respuesta', 'txt_requiere_documento_respuesta', '', '', $tieneFechaMaxRespuesta, '', '');
 
+        $form->addEtiqueta(CORRESPONDENCIA_COPIA);
+        $form->addSelect('select', 'select_copia[]', 'select_copia[]', $opciones, '', '', '', ' multiple required');
 
         $form->writeForm();
         ?>
@@ -555,6 +557,7 @@ switch ($task) {
         $documentoAnexo = $_FILES['file_correspondencia_anexo_add'];
         $estado = $_REQUEST['sel_estado_add'];
         $documentoRespuesta = $_REQUEST['file_correspondencia_respuesta_add'];
+        $copia = $_REQUEST['select_copia'];
 
         $doc_correspondencia = new CCorrespondencia('', $corrData);
 
@@ -580,7 +583,7 @@ switch ($task) {
         $doc_correspondencia->setDocumentoRespuesta($documentoRespuesta);
         $doc_correspondencia->setOperador(OPERADOR_DEFECTO);
 
-        $m = $doc_correspondencia->saveNewCorrespondencia($documentoSoporte, $documentoAnexo);
+        $m = $doc_correspondencia->saveNewCorrespondencia($documentoSoporte, $documentoAnexo, $copia);
 
         echo $html->generaAviso($m, "?mod=" . $modulo . "&niv=" . $niv . "&task=list");
 

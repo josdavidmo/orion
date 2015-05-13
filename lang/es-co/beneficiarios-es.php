@@ -55,6 +55,7 @@ define('LONGITUD_W_E_BENEFICIARIO', 'W/E');
 define('FECHA_INICIO_BENEFICIARIO', 'Fecha Inicio');
 define('META_BENEFICIARIO', 'Meta');
 define('ESTADO_BENEFICIARIO', 'Estado');
+define('OBSERVACION_BENEFICIARIO', 'Observaciones');
 define('DDA_BENEFICIARIO', 'DDA');
 define('GRUPO_BENEFICIARIO', 'Grupo');
 define('CENTRO_POBLADO_BENEFICIARIO', 'Centro Poblado');

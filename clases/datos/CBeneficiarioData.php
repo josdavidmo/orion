@@ -97,7 +97,7 @@ class CBeneficiarioData {
         $sql = "SELECT idCentroPoblado, codigoDane, nombre "
                 . "FROM centropoblado "
                 . "WHERE codigoDane = " . $codigoDane;
-        $r = $this->db->ejecutarConsulta($sql);
+		$r = $this->db->ejecutarConsulta($sql);
         $centroPoblado = null;
         if ($r) {
             $w = mysql_fetch_array($r);
@@ -122,7 +122,8 @@ class CBeneficiarioData {
                 . "e.descripcionEstadoBeneficiario, "
                 . "d.descripcionDDABeneficiario, "
                 . "g.descripcionGrupoBeneficiario,"
-                . "t.descripcionTipoBeneficiario "
+                . "t.descripcionTipoBeneficiario, "
+				. "b.observaciones "
                 . "FROM beneficiario b "
                 . "INNER JOIN metabeneficiario m ON m.idMetaBeneficiario = b.idMetaBeneficiario "
                 . "INNER JOIN estadobeneficiario e ON e.idEstadoBeneficiario = b.idEstadoBeneficiario "
@@ -161,6 +162,7 @@ class CBeneficiarioData {
                 $beneficiarios[$cont]['dda'] = $w['descripcionDDABeneficiario'];
                 $beneficiarios[$cont]['grupo'] = $w['descripcionGrupoBeneficiario'];
                 $beneficiarios[$cont]['tipo'] = $w['descripcionTipoBeneficiario'];
+				$beneficiarios[$cont]['observaciones'] = $w['observaciones'];
                 $cont++;
             }
         }
@@ -188,8 +190,9 @@ class CBeneficiarioData {
                 . "b.longitudSegundos, b.W, b.fechaInicio, m.descripcionMetaBeneficiario, "
                 . "e.descripcionEstadoBeneficiario, "
                 . "d.descripcionDDABeneficiario, "
-                . "g.descripcionGrupoBeneficiario,"
-                . "t.descripcionTipoBeneficiario "
+                . "g.descripcionGrupoBeneficiario, "
+                . "t.descripcionTipoBeneficiario, "
+				. "b.observaciones "
                 . "FROM beneficiario b "
                 . "INNER JOIN metabeneficiario m ON m.idMetaBeneficiario = b.idMetaBeneficiario "
                 . "INNER JOIN estadobeneficiario e ON e.idEstadoBeneficiario = b.idEstadoBeneficiario "
@@ -227,6 +230,7 @@ class CBeneficiarioData {
                 $beneficiarios[$cont]['estado'] = $w['descripcionEstadoBeneficiario'];
                 $beneficiarios[$cont]['grupo'] = $w['descripcionGrupoBeneficiario'];
                 $beneficiarios[$cont]['tipo'] = $w['descripcionTipoBeneficiario'];
+				$beneficiarios[$cont]['observaciones'] = $w['observaciones'];
                 $cont++;
             }
         }
@@ -245,7 +249,16 @@ class CBeneficiarioData {
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             $w = mysql_fetch_array($r);
-            $beneficiario = new CBeneficiario($w['idBeneficiario'], $w['codigoInterventoria'], $w['codigoMintic'], $w['codigoOperador'], $w['nombre'], $w['msnm'], $w['latitudGrados'], $w['latitudMinutos'], $w['latitudSegundos'], $w['S'], $w['longitudGrados'], $w['longitudMinutos'], $w['longitudSegundos'], $w['W'], $w['fechaInicio'], $w['idMetaBeneficiario'], $w['idEstadoBeneficiario'], $w['idDDABeneficiario'], $w['idGrupoBeneficiario'], $w['idCentroPoblado'], $w['idTipoBeneficiario']);
+            $beneficiario = new CBeneficiario($w['idBeneficiario'], $w['codigoInterventoria'], 
+										      $w['codigoMintic'], $w['codigoOperador'], 
+											  $w['nombre'], $w['msnm'], $w['latitudGrados'], 
+											  $w['latitudMinutos'], $w['latitudSegundos'], 
+											  $w['S'], $w['longitudGrados'], $w['longitudMinutos'], 
+											  $w['longitudSegundos'], $w['W'], 
+											  $w['fechaInicio'], $w['idMetaBeneficiario'], 
+											  $w['idEstadoBeneficiario'], $w['observaciones'],
+											  $w['idDDABeneficiario'], $w['idGrupoBeneficiario'], 
+											  $w['idCentroPoblado'], $w['idTipoBeneficiario']);
         }
         return $beneficiario;
     }
@@ -261,7 +274,7 @@ class CBeneficiarioData {
                 . 'latitudGrados,latitudMinutos,latitudSegundos,S, '
                 . 'longitudGrados,longitudMinutos,longitudSegundos,W,fechaInicio, '
                 . 'idMetaBeneficiario,idEstadoBeneficiario,idDDABeneficiario, '
-                . 'idGrupoBeneficiario,idCentroPoblado,idTipoBeneficiario ';
+                . 'idGrupoBeneficiario,idCentroPoblado,idTipoBeneficiario, observaciones';
         $valores = "'" . $beneficiario->getCodigoInterventoria() . "','"
                 . $beneficiario->getCodigoMintic() . "','"
                 . $beneficiario->getCodigoOperador() . "','"
@@ -281,7 +294,8 @@ class CBeneficiarioData {
                 . $beneficiario->getDda() . "','"
                 . $beneficiario->getGrupo() . "','"
                 . $beneficiario->getCentroPoblado() . "','"
-                . $beneficiario->getTipo() . "'";
+                . $beneficiario->getTipo() . "','"
+				. $beneficiario->getObservaciones() . "'";
         $r = $this->db->insertarRegistro($tabla, $campos, $valores);
         return $r;
     }
@@ -299,7 +313,7 @@ class CBeneficiarioData {
             'longitudMinutos', 'longitudSegundos', 'W', 'fechaInicio',
             'idMetaBeneficiario', 'idEstadoBeneficiario',
             'idDDABeneficiario', 'idGrupoBeneficiario',
-            'idCentroPoblado', 'idTipoBeneficiario');
+            'idCentroPoblado', 'idTipoBeneficiario', 'observaciones');
         $valores = array("'" . $beneficiario->getCodigoInterventoria() . "'",
             "'" . $beneficiario->getCodigoMintic() . "'",
             "'" . $beneficiario->getCodigoOperador() . "'",
@@ -319,7 +333,8 @@ class CBeneficiarioData {
             "'" . $beneficiario->getDda() . "'",
             "'" . $beneficiario->getGrupo() . "'",
             "'" . $beneficiario->getCentroPoblado() . "'",
-            "'" . $beneficiario->getTipo() . "'");
+            "'" . $beneficiario->getTipo() . "'",
+			"'" . $beneficiario->getObservaciones() . "'");
         $condicion = "idBeneficiario = " . $beneficiario->getIdBeneficiario();
         $r = $this->db->actualizarRegistro($tabla, $campos, $valores, $condicion);
         return $r;
@@ -352,6 +367,7 @@ class CBeneficiarioData {
                 . "beneficiario b1, "
                 . "beneficiario b2, "
                 . "tipocambiobeneficiario t, "
+				. "observaciones o, "
                 . "centroPoblado c1, "
                 . "centroPoblado c2, "
                 . "tipoBeneficiario t1, "
@@ -511,6 +527,9 @@ class CBeneficiarioData {
             $codigoOperador = $data->sheets[0]['cells'][$i][3];
             $nombre = $data->sheets[0]['cells'][$i][4];
             $centroPoblado = $data->sheets[0]['cells'][$i][5];
+			if($centroPoblado == ""){
+				continue;
+			}
             $centroPoblado = $this->getCentroPobladoByCodigoDane($centroPoblado)->getIdCentroPoblado();
             $msnm = $data->sheets[0]['cells'][$i][6];
             $latitudGrados = $data->sheets[0]['cells'][$i][7];
@@ -531,7 +550,8 @@ class CBeneficiarioData {
             } else {
                 $west = 0;
             }
-            $fechaInicio = $data->sheets[0]['cells'][$i][15];
+            $dt = DateTime::createFromFormat('m/d/Y', $data->sheets[0]['cells'][$i][15]);
+			$fechaInicio = $dt->format('Y-m-d');
             $meta = $data->sheets[0]['cells'][$i][16];
             $meta = $daoBasica->getIdBasicasByDescripcion('metabeneficiario', $meta)->getId();
             $estado = $data->sheets[0]['cells'][$i][17];
@@ -542,6 +562,7 @@ class CBeneficiarioData {
             $grupo = $daoBasica->getIdBasicasByDescripcion('grupobeneficiario', $grupo)->getId();
             $tipo = $data->sheets[0]['cells'][$i][20];
             $tipo = $daoBasica->getIdBasicasByDescripcion('tipobeneficiario', $tipo)->getId();
+			$observaciones = $data->sheets[0]['cells'][$i][21];
             $beneficiario = new CBeneficiario($id, 
                                               $codigoInterventoria, 
                                               $codigoMintic, 
@@ -558,12 +579,13 @@ class CBeneficiarioData {
                                               $west, 
                                               $fechaInicio, 
                                               $meta, 
-                                              $estado, 
+                                              $estado,
+											  $observaciones,
                                               $dda, 
                                               $grupo, 
                                               $centroPoblado, 
                                               $tipo);
-            $r = $r && $this->insertBeneficiario($beneficiario);
+			$r = $r && $this->insertBeneficiario($beneficiario);
         }
         return $r;
     }

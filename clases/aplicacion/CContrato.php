@@ -5,7 +5,7 @@
  * @package clases
  * @subpackage aplicacion
  * @author SERTIC SAS
- * @version 2015.03.12
+ * @version 2015.05.08
  * @copyright SERTIC
  */
 class CContrato {
@@ -21,6 +21,9 @@ class CContrato {
 
     /** Almacena el valor del contrato. */
     var $valor;
+	
+	 /** Almacena el valor de Anticipo del contrato. */
+    var $anticipo;
 
     /** Almacena el plazo del contrato. */
     var $plazo;
@@ -37,12 +40,13 @@ class CContrato {
     /** Almacena el acta inicio del contrato. */
     var $moneda;
     
-    function CContrato($idContrato, $numero, $objeto, $valor, $plazo, 
+    function CContrato($idContrato, $numero, $objeto, $valor, $anticipo, $plazo, 
                        $fechaInicio, $fechaFin, $soporte, $moneda) {
         $this->idContrato = $idContrato;
         $this->numero = $numero;
         $this->objeto = $objeto;
         $this->valor = $valor;
+		$this->anticipo = $anticipo;
         $this->plazo = $plazo;
         $this->fechaInicio = $fechaInicio;
         $this->fechaFin = $fechaFin;
@@ -66,6 +70,10 @@ class CContrato {
         return $this->valor;
     }
 
+	function getAnticipo() {
+        return $this->anticipo;
+    }
+	
     function getPlazo() {
         return $this->plazo;
     }
@@ -102,6 +110,10 @@ class CContrato {
         $this->valor = $valor;
     }
 
+	function setAnticipo($anticipo) {
+        $this->anticipo = $anticipo;
+    }
+	
     function setPlazo($plazo) {
         $this->plazo = $plazo;
     }

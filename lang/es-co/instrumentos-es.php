@@ -35,4 +35,5 @@ define('EXITO_ACTUALIZAR_INSTRUMENTO', 'El instrumento ha sido actualizado con �
 define('INSTRUMENTO', 'Instrumento');
 define('TIPO_INSTRUMENTO', 'Tipo de Instrumento');
 define('ENCUESTA_AGREGADA_FRACASO', 'Ocurrio un error al insertar el instrumento <hr> Verique que el código no este duplicado');
+define('ENCABEZADO_INTRUMENTO', 'Módulo');
 ?>

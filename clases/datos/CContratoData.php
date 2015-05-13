@@ -30,18 +30,10 @@ class CContratoData {
     public function getContratoById($idContrato) {
         $contrato = null;
         $sql = "SELECT * FROM contrato WHERE idContrato = " . $idContrato;
-        $r = $this->db->ejecutarConsulta($sql);
+		$r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             $w = mysql_fetch_array($r);
-            $contrato = new CContrato($w['idContrato'], 
-                                      $w['numero'], 
-                                      $w['objeto'], 
-                                      number_format($w['valor'], 2, ',', '.'), 
-                                      $w['plazo'], 
-                                      $w['fechaInicio'], 
-                                      $w['fechaFin'], 
-                                      $w['soporte'], 
-                                      $w['idMoneda']);
+            $contrato = new CContrato($w['idContrato'], $w['numero'], $w['objeto'], number_format($w['valor'], 2, ',', '.'), number_format($w['anticipo'], 2, ',', '.'),$w['plazo'], $w['fechaInicio'], $w['fechaFin'], $w['soporte'], $w['idMoneda']);
         }
         return $contrato;
     }
@@ -54,11 +46,12 @@ class CContratoData {
     public function getContratos($criterio = "1") {
         $contratos = null;
         $sql = "SELECT c.*, m.Descripcion_Moneda as moneda, "
-		. "(SELECT descripcion FROM otrosi o WHERE o.idContrato = c.idContrato AND o.idOtroSi = (SELECT MAX(idOtroSi) FROM otrosi)) as objetoContrato, "
+                . "(SELECT descripcion FROM otrosi o WHERE o.idContrato = c.idContrato AND o.idOtroSi = (SELECT MAX(idOtroSi) FROM otrosi)) as objetoContrato, "
                 . "GREATEST(COALESCE((SELECT MAX(fecha) FROM otrosi o WHERE o.idContrato = c.idContrato), 0), c.fechaFin) as fechaContrato, "
                 . "COALESCE((SELECT SUM(valor) FROM otrosi o WHERE o.idContrato = c.idContrato), 0) + c.valor as valorContrato, "
                 . "(SELECT SUM(valor_total) FROM ordenesdepago WHERE contrato_idContrato = c.idContrato) as sumaOrdenes, "
-                . "(SELECT COUNT(valor_total) FROM ordenesdepago WHERE contrato_idContrato = c.idContrato) as numeroOrdenes "
+                . "(SELECT COUNT(valor_total) FROM ordenesdepago WHERE contrato_idContrato = c.idContrato) as numeroOrdenes, "
+                . "(SELECT SUM(amortizacion) FROM ordenesdepago WHERE contrato_idContrato = c.idContrato) as amortizacion "
                 . "FROM contrato c "
                 . "INNER JOIN monedas m ON m.Id_Moneda = c.idMoneda "
                 . "WHERE " . $criterio;
@@ -68,14 +61,21 @@ class CContratoData {
             while ($w = mysql_fetch_array($r)) {
                 $contratos[$cont]['idContrato'] = $w['idContrato'];
                 $contratos[$cont]['numero'] = $w['numero'];
-				$contratos[$cont]['objeto'] = $w['objeto'];
-				if($w['objetoContrato'] != NULL){
-					$contratos[$cont]['objeto'] = $w['objetoContrato'];
-				}
+                $contratos[$cont]['objeto'] = $w['objeto'];
+                if ($w['objetoContrato'] != NULL) {
+                    $contratos[$cont]['objeto'] = $w['objetoContrato'];
+                }
                 $contratos[$cont]['valor'] = number_format($w['valorContrato'], 2, ',', '.');
-                $contratos[$cont]['sumaOrdenes'] = number_format($w['sumaOrdenes'], 2, ',', '.');
-                if($w['valor'] < $w['sumaOrdenes']){
-                    $contratos[$cont]['sumaOrdenes'] = "<div style='color: red'>".number_format($w['sumaOrdenes'], 0, ',', '.')."</div>";
+				$contratos[$cont]['anticipo'] = number_format($w['anticipo'], 2, ',', '.');
+				$contratos[$cont]['amortizacion'] = number_format($w['amortizacion'], 2, ',', '.');
+				$amortizacionPorPagar = $w['anticipo'] - $w['amortizacion'];
+				$contratos[$cont]['amortizacionPorPagar'] = number_format($amortizacionPorPagar, 2, ',', '.');
+                $valorPorEjecutar = $w['valorContrato'] - ($w['sumaOrdenes'] - $w['anticipo']) + $w['amortizado'];
+				$valorEjecutado = $w['valorContrato'] - $valorPorEjecutar;
+                $contratos[$cont]['valorEjecutado'] = number_format($valorEjecutado, 2, ',', '.');
+                $contratos[$cont]['valorPorEjecutar'] = number_format($valorPorEjecutar, 2, ',', '.');
+                if ($valorPorEjecutar < 0) {
+                    $contratos[$cont]['valorPorEjecutar'] = "<div style='color: red'>" . number_format($valorPorEjecutar, 0, ',', '.') . "</div>";
                 }
                 $contratos[$cont]['numeroOrdenes'] = $w['numeroOrdenes'];
                 $contratos[$cont]['plazo'] = $w['plazo'];
@@ -90,7 +90,7 @@ class CContratoData {
                     if ($fechaActual < $w['fechaContrato']) {
                         $contratos[$cont]['estado'] = '<img src=./templates/img/ico/amarillo.gif> Vigente';
                     } else {
-                        $contratos[$cont]['estado'] = '<img src=./templates/img/ico/rojo.gif> Vencido';
+                        $contratos[$cont]['estado'] = '<img src=./templates/img/ico/rojo.gif> Finalizado';
                     }
                 }
                 $cont++;
@@ -106,11 +106,12 @@ class CContratoData {
      */
     public function insertContrato($contrato) {
         $tabla = "contrato";
-        $campos = "numero,objeto,valor,plazo,fechaInicio,fechaFin,"
+        $campos = "numero,objeto,valor,anticipo,plazo,fechaInicio,fechaFin,"
                 . "soporte,idMoneda";
         $valores = "'" . $contrato->getNumero() . "','"
                 . $contrato->getObjeto() . "','"
                 . $contrato->getValor() . "','"
+				. $contrato->getAnticipo () . "','"
                 . $contrato->getPlazo() . "','"
                 . $contrato->getFechaInicio() . "','"
                 . $contrato->getFechaFin() . "','"
@@ -141,11 +142,12 @@ class CContratoData {
      */
     public function updateContrato($contrato) {
         $tabla = "contrato";
-        $campos = array("numero", "objeto", "valor", "plazo",
+        $campos = array("numero", "objeto", "valor", "anticipo", "plazo",
             "fechaInicio", "fechaFin", "idMoneda");
         $valores = array("'" . $contrato->getNumero() . "'",
             "'" . $contrato->getObjeto() . "'",
             "'" . $contrato->getValor() . "'",
+			"'" . $contrato->getAnticipo() . "'",
             "'" . $contrato->getPlazo() . "'",
             "'" . $contrato->getFechaInicio() . "'",
             "'" . $contrato->getFechaFin() . "'",

@@ -25,17 +25,17 @@ define('LAYOUT_PATH', realpath('./templates/layouts/'));
 /**
 *host de la base de datos
 */
-define('DB_HOST','localhost');
+define('DB_HOST','equipo04');
 /**
 *usuario de la base de datos
 *@private
 */
-define('DB_USER','root');
+define('DB_USER','pncav');
 /**
 *password del usuario de la base de datos
 *@private
 */
-define('DB_PASSWORD','');
+define('DB_PASSWORD','pnc4vpr0ducc10n');
 /**
 *nombre de la base de datos
 */

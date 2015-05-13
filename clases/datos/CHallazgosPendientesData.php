@@ -67,10 +67,10 @@ class CHallazgosPendientesData {
                 $hallazgosPendientes[$cont]['usuario'] = $w['usuario'];
                 $hallazgosPendientes[$cont]['fechaInicio'] = $w['fecha'];
                 $hallazgosPendientes[$cont]['observacion'] = $w['observacion'];
-                $hallazgosPendientes[$cont]['archivo'] = "<a href='" . $ruta . "/" . $w['archivo'] . "'>" . $w['archivo'] . "</a>";
+                $hallazgosPendientes[$cont]['archivo'] = "<a href='" . $ruta . "/" . $w['archivo'] . "' target='_blank'>" . $w['archivo'] . "</a>";
                 $hallazgosPendientes[$cont]['fecha'] = $w['fechaRespuesta'];
                 $hallazgosPendientes[$cont]['observacionRespuesta'] = $w['observacionRespuesta'];
-                $hallazgosPendientes[$cont]['archivoRespuesta'] = "<a href='" . $ruta . "/" . $w['archivoRespuesta'] . "'>" . $w['archivoRespuesta'] . "</a>";
+                $hallazgosPendientes[$cont]['archivoRespuesta'] = "<a href='" . $ruta . "/" . $w['archivoRespuesta'] . "' target='_blank'>" . $w['archivoRespuesta'] . "</a>";
                 $hallazgosPendientes[$cont]['estado'] = '<img src=./templates/img/ico/verde.gif> Cerrado';
                 if ($w['fechaRespuesta'] == NULL) {
                     $hallazgosPendientes[$cont]['estado'] = '<img src=./templates/img/ico/rojo.gif> Abierto';

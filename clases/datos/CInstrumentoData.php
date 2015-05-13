@@ -35,7 +35,16 @@ class CInstrumentoData {
                 . ", '" . $instrumento->getNivel() . "'"
                 . ", '" . $instrumento->getTipo() . "'";
         $r = $this->db->insertarRegistro($tabla, $campos, $valores);
+        $this->actualizarOpcion($instrumento->getNivel());
         return $r;
+    }
+
+    public function actualizarOpcion($idEncabezado) {
+        $tabla = "opcion";
+        $campos = array('opc_variable');
+        $valores = array("'genEjecucion&ref=$idEncabezado'");
+        $condicion = "opc_id = '$idEncabezado'";
+        $r = $this->db->actualizarRegistro($tabla, $campos, $valores, $condicion);
     }
 
     /**
@@ -87,15 +96,19 @@ class CInstrumentoData {
      */
     public function getInstrumentos() {
         $instrumentos = null;
-        $sql = "SELECT r.idInstrumento, r.nombre, r.codigo, "
-                . "COUNT(r.idSeccion) as secciones, "
-                . "SUM(r.preguntas) as preguntas "
-                . "FROM (SELECT i.idInstrumento, i.nombre, i.codigo, "
-                . "s.idSeccion, COUNT(p.idPregunta) as preguntas "
-                . "FROM instrumentos i left join seccion s "
-                . "on s.idInstrumento = i.idInstrumento "
-                . "left join pregunta p on p.idSeccion = s.idSeccion "
-                . "GROUP BY s.idSeccion) r GROUP BY r.idInstrumento";
+        $sql = "SELECT i.idInstrumento,i.nombre,i.codigo, "
+                . "(SELECT COUNT(idSeccion) "
+                . "FROM seccion s  "
+                . "WHERE s.idInstrumento = i.idInstrumento) as secciones, "
+                . "(SELECT count(p.idPregunta) as preguntas "
+                . "FROM pregunta p "
+                . "INNER JOIN seccion s ON s.idSeccion = p.idSeccion "
+                . "WHERE s.idInstrumento = i.idInstrumento) as preguntas, "
+                . "o.opc_nombre, "
+                . "t.enc_tipo_nombre "
+                . "FROM pncav2.instrumentos i "
+                . "INNER JOIN opcion o ON o.opc_id = i.idEncabezado "
+                . "INNER JOIN encuesta_tipo t ON t.enc_tipo_id = i.idTipoEncuesta";
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             $cont = 0;
@@ -103,6 +116,8 @@ class CInstrumentoData {
                 $instrumentos[$cont]['idInstrumento'] = $w['idInstrumento'];
                 $instrumentos[$cont]['codigo'] = $w['codigo'];
                 $instrumentos[$cont]['nombre'] = $w['nombre'];
+                $instrumentos[$cont]['modulo'] = $w['opc_nombre'];
+                $instrumentos[$cont]['tipo'] = $w['enc_tipo_nombre'];
                 $instrumentos[$cont]['secciones'] = $w['secciones'];
                 $instrumentos[$cont]['preguntas'] = $w['preguntas'];
                 $cont++;
@@ -110,25 +125,18 @@ class CInstrumentoData {
         }
         return $instrumentos;
     }
-    
+
     /**
      * Obtiene el numero de preguntas de un instrumento
      * @param type $idInstrumento
      * @return type
      */
-    public function getNumeroPreguntasByInstrumento($idInstrumento){
+    public function getNumeroPreguntasByInstrumento($idInstrumento) {
         $preguntas = null;
-        $sql = "SELECT r.idInstrumento, r.nombre, r.codigo, "
-                . "COUNT(r.idSeccion) as secciones, "
-                . "SUM(r.preguntas) as preguntas "
-                . "FROM (SELECT i.idInstrumento, i.nombre, i.codigo, "
-                . "s.idSeccion, COUNT(p.idPregunta) as preguntas "
-                . "FROM instrumentos i "
-                ." left join seccion s "
-                . "on s.idInstrumento = i.idInstrumento "
-                . "left join pregunta p on p.idSeccion = s.idSeccion "
-                . "WHERE i.idInstrumento = ".$idInstrumento." "
-                . "GROUP BY s.idSeccion) r GROUP BY r.idInstrumento";
+        $sql = "SELECT count(p.idPregunta) as preguntas FROM pregunta p "
+                . "INNER JOIN seccion s ON s.idSeccion = p.idSeccion "
+                . "INNER JOIN instrumentos i ON i.idInstrumento = s.idInstrumento "
+                . "WHERE i.idInstrumento = $idInstrumento AND p.requerido = 1";
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             $w = mysql_fetch_array($r);
@@ -149,7 +157,7 @@ class CInstrumentoData {
         $instrumento = null;
         if ($r) {
             $w = mysql_fetch_array($r);
-            $instrumento = new CInstrumento($w['idInstrumento'], $w['nombre'], $w['codigo'], $w['idTipoEncuesta'], $w['idEncabezado'] );
+            $instrumento = new CInstrumento($w['idInstrumento'], $w['nombre'], $w['codigo'], $w['idTipoEncuesta'], $w['idEncabezado']);
         }
         return $instrumento;
     }
@@ -240,32 +248,23 @@ class CInstrumentoData {
         $pregunta = null;
         if ($r) {
             $w = mysql_fetch_array($r);
-            $pregunta = new CPregunta($w['idPregunta'], 
-                                      $this->getSeccionById($w['idSeccion']), 
-                                      $w['tipo'], 
-                                      $w['numero'], 
-                                      $w['requerido'], 
-                                      $w['enunciado'], 
-                                      $w['descripcion'], 
-                                      $w['opcionRespuesta']);
+            $pregunta = new CPregunta($w['idPregunta'], $this->getSeccionById($w['idSeccion']), $w['tipo'], $w['numero'], $w['requerido'], $w['enunciado'], $w['descripcion'], $w['opcionRespuesta']);
         }
         return $pregunta;
     }
-    
+
     /**
      * Obtiene una seccion por el id del mismo.
      * @param type $idSeccion
      * @return \CSeccion
      */
     public function getSeccionById($idSeccion) {
-        $sql = "SELECT * FROM seccion WHERE idSeccion = ". $idSeccion;
+        $sql = "SELECT * FROM seccion WHERE idSeccion = " . $idSeccion;
         $seccion = null;
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             $w = mysql_fetch_array($r);
-            $seccion = new CSeccion($w['idSeccion'], 
-                                    $this->getInstrumentoById($w['idInstrumento']), 
-                                    $w['nombre'], $w['numero']);
+            $seccion = new CSeccion($w['idSeccion'], $this->getInstrumentoById($w['idInstrumento']), $w['nombre'], $w['numero']);
         }
         return $seccion;
     }
@@ -397,32 +396,32 @@ class CInstrumentoData {
             case '4':
                 $resultado .= "input type='number' pattern='[0-9]{0," . $longitud . "}' placeholder='Escribe solo numeros' ";
                 break;
-            
+
             case '5':
                 $resultado .= "input type='date' placeholder='Escribe solo numeros' ";
                 break;
-				
-			case '6':
+
+            case '6':
                 $resultado .= "input type='file' ";
                 break;
 
             default:
                 break;
         }
-        if($respuesta != null && $tipo != '1'){
-            $resultado .= "value='".$respuesta->getRespuesta()."'";
+        if ($respuesta != null && $tipo != '1') {
+            $resultado .= "value='" . $respuesta->getRespuesta() . "'";
         }
         $resultado .= "class='form-control' ";
-        $resultado .= "id='pregunta".$numero."' "
-                    ."name='pregunta".$numero."' ";
+        $resultado .= "id='pregunta" . $numero . "' "
+                . "name='pregunta" . $numero . "' ";
         if ($pregunta->isRequerido()) {
             $resultado .= " required ";
         }
         $resultado .= " />";
         if ($tipo == '1') {
-			if($respuesta != null){
-				$resultado .= $respuesta->getRespuesta();
-			}
+            if ($respuesta != null) {
+                $resultado .= $respuesta->getRespuesta();
+            }
             $resultado .= "</textarea>";
         }
         return $resultado;
@@ -435,11 +434,13 @@ class CInstrumentoData {
      */
     public function updateInstrumento($instrumento) {
         $tabla = 'instrumentos';
-        $campos = array(' codigo', ' nombre');
+        $campos = array('codigo', 'nombre', 'idEncabezado');
         $valores = array("'" . $instrumento->getCodigo() . "'",
-            "'" . $instrumento->getNombreInstrumento() . "'");
+            "'" . $instrumento->getNombreInstrumento() . "'",
+            "'" . $instrumento->getNivel() . "'");
         $condicion = " idInstrumento = " . $instrumento->getId();
         $r = $this->db->actualizarRegistro($tabla, $campos, $valores, $condicion);
+		$this->actualizarOpcion($instrumento->getNivel());
         return $r;
     }
 
@@ -457,40 +458,40 @@ class CInstrumentoData {
         $r = $this->db->actualizarRegistro($tabla, $campos, $valores, $condicion);
         return $r;
     }
-    
+
     /**
      * Actualiza una pregunta dado el objeto del mismo.
      * @param \CPregunta $pregunta
      * @return boolean
      */
     public function updatePregunta($pregunta) {
-		$tabla = 'pregunta';
-        $campos = array('idSeccion', 'tipo', 'numero', 'enunciado', 'requerido','descripcion', 'opcionRespuesta');
+        $tabla = 'pregunta';
+        $campos = array('idSeccion', 'tipo', 'numero', 'enunciado', 'requerido', 'descripcion', 'opcionRespuesta');
         $valores = array("'" . $pregunta->getSeccion()->getIdSeccion() . "'",
-						"'" . $pregunta->getTipoPregunta() . "'",
-						"'" . $pregunta->getNumero() . "'",
-						"'" . $pregunta->getEnunciado() . "'",
-						"'" . $pregunta->isRequerido() . "'",
-						"'" . $pregunta->getDescripcion() . "'",
-						"'" . $pregunta->getOpcionRespuesta() . "'");
+            "'" . $pregunta->getTipoPregunta() . "'",
+            "'" . $pregunta->getNumero() . "'",
+            "'" . $pregunta->getEnunciado() . "'",
+            "'" . $pregunta->isRequerido() . "'",
+            "'" . $pregunta->getDescripcion() . "'",
+            "'" . $pregunta->getOpcionRespuesta() . "'");
         $condicion = " idPregunta = " . $pregunta->getIdPregunta();
         $r = $this->db->actualizarRegistro($tabla, $campos, $valores, $condicion);
         return $r;
     }
-    
+
     /**
      * Borra una encuesta de la base de datos
      * @param \CRespuesta $respuesta
      * @return type
      */
-    public function deleteRespuesta($respuesta){
+    public function deleteRespuesta($respuesta) {
         $tabla = 'respuestas';
-        $predicado = ' idPregunta = ' . $respuesta->getIdPregunta(). 
+        $predicado = ' idPregunta = ' . $respuesta->getIdPregunta() .
                 ' AND idEncuesta = ' . $respuesta->getIdEncuesta();
         $r = $this->db->borrarRegistro($tabla, $predicado);
         return $r;
     }
-    
+
     /**
      * Almacena las respuestas de una encuesta en la base de datos
      * @param \CRespuesta $respuesta
@@ -503,17 +504,17 @@ class CInstrumentoData {
         $valores = "'" . $respuesta->getIdPregunta() . "','"
                 . "" . $respuesta->getIdEncuesta() . "','"
                 . "" . $respuesta->getRespuesta() . "'";
-		$r = $r && $this->db->insertarRegistro($tabla, $campos, $valores);
-        return $r;        
+        $r = $r && $this->db->insertarRegistro($tabla, $campos, $valores);
+        return $r;
     }
-    
+
     /**
      * Obtiene las respuestas de un instrumento.
      * @param type $idEncuesta
      * @param type $idPregunta
      * @return \CRespuesta
      */
-    public function getRespuestaByIdPreguntaAndIdEncuesta($idEncuesta, $idPregunta){
+    public function getRespuestaByIdPreguntaAndIdEncuesta($idEncuesta, $idPregunta) {
         $sql = "SELECT * FROM respuestas WHERE idPregunta = "
                 . $idPregunta . " AND idEncuesta = " . $idEncuesta;
         $respuesta = new CRespuesta(null, null, null);
@@ -524,14 +525,13 @@ class CInstrumentoData {
         }
         return $respuesta;
     }
-    
-    
+
     /**
      * Obtiene el numero de respuestas dadas en una encuesta.
      * @param type $idEncuesta
      * @return type
      */
-    public function getNumeroRespuestasByEncuesta($idEncuesta){
+    public function getNumeroRespuestasByEncuesta($idEncuesta) {
         $sql = "SELECT COUNT(*) FROM respuestas WHERE idEncuesta = " . $idEncuesta;
         $r = $this->db->ejecutarConsulta($sql);
         $numero = 0;
@@ -541,8 +541,8 @@ class CInstrumentoData {
         }
         return $numero;
     }
-	
-	/**
+
+    /**
      * Almacena un archivo en la base de datos.
      * @param type $archivo
      * @return type

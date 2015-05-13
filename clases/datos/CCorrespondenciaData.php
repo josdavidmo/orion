@@ -187,7 +187,7 @@ class CCorrespondenciaData {
         return $r;
     }
 
-    function insertCorrespondencia($tipo, $tema, $subtema, $autor, $destinatario, $fechaRadicado, $referencia, $descripcion, $documentoSoporte, $responsableRespuesta, $fechaMaxRepuesta, $anexos, $referenciaRespuesta, $fechaRespuesta, $referenciaRespondido, $estado, $operador) {
+    function insertCorrespondencia($tipo, $tema, $subtema, $autor, $destinatario, $fechaRadicado, $referencia, $descripcion, $documentoSoporte, $responsableRespuesta, $fechaMaxRepuesta, $anexos, $referenciaRespuesta, $fechaRespuesta, $referenciaRespondido, $estado, $operador, $copia) {
 
         $tabla = "documento_comunicado";
         $campos = "dti_id, dot_id, dos_id, "
@@ -206,26 +206,35 @@ class CCorrespondenciaData {
                 . $referenciaRespuesta . "','" . $fechaRespuesta . "','" . $referenciaRespondido . "','"
                 . $estado . "','" . $operador . "','" . date("Y-m-d H:i:s") . "'";
         $r = $this->db->insertarRegistro($tabla, $campos, $valores);
+        $descripcion = str_replace(",", "&&", $descripcion);
+        $valores = "'" . $tipo . "','" . $tema . "','" . $subtema . "','"
+                . $autor . "','" . $destinatario . "','" . $fechaRadicado . "','"
+                . $referencia . "','" . $descripcion . "','" . $documentoSoporte . "','"
+                . $responsableRespuesta . "','" . $fechaMaxRepuesta . "','" . $anexos . "','"
+                . $referenciaRespuesta . "','" . $fechaRespuesta . "','" . $referenciaRespondido . "','"
+                . $estado . "','" . $operador . "','" . date("Y-m-d H:i:s") . "'";
         if ($r == "true") {
-            $this->sendMail($valores);
+            $this->sendMail($valores, $copia);
         }
         return $r;
     }
 
-    function sendMail($valores) {
+    function sendMail($valores, $copia) {
         $r = 'true';
         $array = explode(",", $valores);
-        echo var_dump($array);
         require_once './clases/PHPMailer-master/PHPMailerAutoload.php';
         $daoUser = new CUserData($this->db);
         $usu_id = $array[9];
         $usuario = $daoUser->getInformacionBasicaPersonal("usu_id = $usu_id", "usu_id");
         $correo = $usuario[0]['correo'];
         if ($correo != NULL) {
-            $mail = new PHPMailer(); 
-            $mail->IsSMTP(); 
-            $mail->SMTPDebug = 0; 
-            $mail->SMTPAuth = true; 
+            $mail = new PHPMailer();
+            $mail->charSet = "UTF-8";
+            $mail->isHTML(true);
+            $mail->AddAddress($correo);
+            $mail->IsSMTP();
+            $mail->SMTPDebug = 0;
+            $mail->SMTPAuth = true;
             $mail->SMTPSecure = 'tls';
             $mail->Host = "smtp.office365.com";
             $mail->Port = 587;
@@ -239,29 +248,39 @@ class CCorrespondenciaData {
             $mail->Subject = $codigoReferencia;
             date_default_timezone_set('America/Bogota');
             $now = date('h', time());
-            echo $now;
+
             $saludo = BUENOS_DIAS;
-            if($now > 12){
+            if ($now > 12) {
                 $saludo = BUENOS_TARDES;
             }
             $saludo .= ": <br>";
             $fechaRadicado = str_replace("'", "", $array[5]);
-            $descripcion = str_replace("'", "", $array[7]);
+            $descripcion = str_replace(array("'","&&"), array("",","), $array[7]);
             $anexos = str_replace("'", "", $array[11]);
             $cuerpo = "El comunicado $codigoReferencia fue radicado en la "
                     . "interventor&iacute;a el d&iacute;a $fechaRadicado con $descripcion";
             $pie = "El documento junto con los anexos ya est&aacute;n cargados en la "
                     . "carpeta compartida y en el sistema de informaci&oacute;n,";
-            if($anexos == NULL){
+            if ($anexos == NULL) {
                 $pie = "El documento ya est&aacute; cargado en la carpeta compartida y "
                         . "en el sistema de informaci&oacute;n.";
-                
             }
-            
-            $mensaje = "$saludo $cuerpo. $pie";
+
+            $firma = "<br>Cordialmente,"
+                     ."<br>Asistente de Gesti&oacute;n Documental"
+		     ."<br>Proyecto Nacional Conectividad Alta Velocidad (PNCAV)";
+
+            $mensaje = "$saludo<br> $cuerpo. $pie <br>$firma";
+            $mensaje = utf8_decode($mensaje);
             $mail->Body = $mensaje;
-            echo $correo;
-            $mail->AddAddress($correo);
+
+            foreach ($copia as $id_user) {
+                $usuario = $daoUser->getInformacionBasicaPersonal("usu_id = $id_user", "usu_id");
+                $correo = $usuario[0]['correo'];
+                if ($correo != NULL) {
+                    $mail->addAddress($correo);
+                }
+            }
             if (!$mail->Send()) {
                 $r = 'false';
             }

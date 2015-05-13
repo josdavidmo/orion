@@ -19,11 +19,11 @@ class CArchivoData {
             if ($cont != 0) {
                 $directorios[$cont]['id_element'] = $ruta . $archivo;
                 $directorios[$cont]['nombre'] = "<a href='?mod=archivo&niv=1&task=download&operador=1&file=$ruta$archivo' download='$archivo'>" . $archivo . "</a>";
-                $directorios[$cont]['tamano'] = filesize($ruta . $archivo) / 1000;
+                //$directorios[$cont]['tamano'] = filesize($ruta . $archivo) / 1000;
                 if (is_dir($ruta . $archivo)) {
                     $directorios[$cont]['nombre'] = "<a href='?mod=archivo&niv=1&operador=1&ruta=$ruta$archivo'>" . $archivo . "</a>";
                     if ($cont != 1) {
-                        $directorios[$cont]['tamano'] = $this->dirSize($ruta . $archivo) / 1000;
+                        //$directorios[$cont]['tamano'] = $this->dirSize($ruta . $archivo) / 1000;
                     }
                 }
                 $directorios[$cont]['fechaModificacion'] = date('Y-m-d', filectime($ruta . $archivo));
@@ -72,3 +72,5 @@ class CArchivoData {
     }
 
 }
+?>
+        

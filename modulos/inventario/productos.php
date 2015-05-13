@@ -358,7 +358,7 @@ switch ($task) {
         $form->addInputText('text', 'txt_valor_unitario', 'txt_valor_unitario', '19', '19', null, null, 'autofocus pattern="' . PATTERN_NUMEROS . '" title="' . $html->traducirTildes(TITLE_NUMEROS_FINANCIEROS) . '" required');
 
         $form->addEtiqueta(CANTIDAD_PRODUCTOS);
-        $form->addInputText('text', 'txt_cantidad', 'txt_cantidad', '5', '5', null, null, 'autofocus pattern="' . PATTERN_NUMEROS . '" title="' . $html->traducirTildes(TITLE_NUMEROS) . '" onkeyup="formatearNumero(this);" required');
+        $form->addInputText('text', 'txt_cantidad', 'txt_cantidad', '6', '6', null, null, 'autofocus pattern="' . PATTERN_NUMEROS . '" title="' . $html->traducirTildes(TITLE_NUMEROS) . '" onkeyup="formatearNumero(this);" required');
 
         $familias = $daoBasicas->getBasicas('familias');
         $opciones = null;

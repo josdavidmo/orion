@@ -73,5 +73,6 @@ define('ERROR_REFERENCIA_REPETIDA','El código de referencia ya existe');
 define('ERROR_CORRESPONDECIA_FECHA_RESPUESTA', '**Debe indicar fecha de respuesta');
 
 define('NO_REQUIERE_RESPUESTA', 'El comunicado no requiere respuesta');
+define('CORRESPONDENCIA_COPIA', 'Copia a Responsable');
 ?>
 

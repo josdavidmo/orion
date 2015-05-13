@@ -103,5 +103,5 @@ define('ALARMA_VERDE', 'Verde');
 define('EXITO_RESPONDER_COMUNICADO', 'El comunicado ha sido respondido con éxito');
 define('ERROR_RESPONDER_COMUNICADO', 'Ocurrio un error al responder el comunicado');
 define('BUENOS_DIAS', 'Buenos Dias');
-define('BUENOS_TARDES', 'Buenos Tardes');
+define('BUENOS_TARDES', 'Buenas Tardes');
 ?>

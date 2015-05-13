@@ -57,13 +57,12 @@ class CDocumentoBasicoData {
         $query = "SELECT * FROM $tabla WHERE $criterio";
         $documentosBasicos = null;
         $r = $this->db->ejecutarConsulta($query);
-        $ruta = RUTA_DOCUMENTOS . "/" . $this->ruta . "/";
         if ($r) {
             $cont = 0;
             while ($w = mysql_fetch_array($r)) {
                 $documentosBasicos[$cont]['id'] = $w['id'];
                 $documentosBasicos[$cont]['descripcion'] = $w['descripcion'];
-                $ruta .= $w['archivo'];
+                $ruta = RUTA_DOCUMENTOS . "/" . $this->ruta . "/" . $w['archivo'];
                 $documentosBasicos[$cont]['archivo'] = "<a href='$ruta' >" . $w['archivo'] . "</a>";
                 $cont++;
             }

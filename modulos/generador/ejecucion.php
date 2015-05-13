@@ -25,9 +25,6 @@ switch ($task) {
         $estado = $_REQUEST['txt_estado'];
         $consecutivo_encuesta = $_REQUEST['txt_consecutivo_encuesta'];
         $instrumento = $_REQUEST['txt_instrumento'];
-        $tipo = $_REQUEST['txt_tipo'];
-        $modu = $_REQUEST['txt_modulo'];
-        $criterio = $_REQUEST['txt_criterio'];
         //-------------------------------criterios---------------------------
         $criterio = " 1";
 
@@ -41,21 +38,32 @@ switch ($task) {
             $criterio .= " and m.mun_id = " . $municipio;
         }
         if (isset($estado) && $estado != -1 && $estado != '') {
-            $criterio .= " and g.ees_id = " . $estado;
+            
+            switch ($estado) {
+                
+                case "1":
+                    $criterio .= " AND (SELECT count(e.enc_id) FROM generador_encuesta e WHERE e.pla_id = g.pla_id AND e.ees_id)/(SELECT count(e.enc_id) FROM generador_encuesta e WHERE e.pla_id = g.pla_id) = 1";
+                    break;
+
+                case "2":
+                    $criterio .= " AND g.pla_fecha_fin > NOW() AND (SELECT count(e.enc_id) FROM generador_encuesta e WHERE e.pla_id = g.pla_id AND e.ees_id)/(SELECT count(e.enc_id) FROM generador_encuesta e WHERE e.pla_id = g.pla_id) != 1";
+                    break;
+
+                case "3":
+                    $criterio .= " AND g.pla_fecha_fin < NOW() AND (SELECT count(e.enc_id) FROM generador_encuesta e WHERE e.pla_id = g.pla_id AND e.ees_id)/(SELECT count(e.enc_id) FROM generador_encuesta e WHERE e.pla_id = g.pla_id) != 1";
+                    break;
+
+                default:
+                    break;
+            }
         }
         if (isset($instrumento) && $instrumento != -1 && $instrumento != '') {
-            $criterio .= " and i.idInstrumento' = " . $instrumento;
+            $criterio .= " and i.idInstrumento = " . $instrumento;
         }
         if (isset($ref) && $ref != -1 && $ref != '') {
             $criterio .= " and i.idEncabezado = " . $ref;
         }
-        if (isset($tipo) && $tipo != -1 && $tipo != '') {
-            $criterio .= " and i.idTipoEncuesta = " . $tipo;
-        }
-        if (isset($modu) && $modu != -1 && $modu != '') {
-            $criterio .= " and i.idEncabezado = " . $modu;
-        }
-        if ($nivel != 1) {
+        if ($nivel != 1 && $id_usuario != 64) {
             $criterio .=" and u.usu_id=$id_usuario";
         }
 
@@ -113,7 +121,11 @@ switch ($task) {
 
         $form->addEtiqueta(INSTRUMENTO);
         $opciones = null;
-        $ejes = $planData->getInstrumentos(' idInstrumento');
+		if($ref != ""){
+			$ejes = $planData->getInstrumentos(' idInstrumento', "idEncabezado = $ref");
+		} else {
+			$ejes = $planData->getInstrumentos(' idInstrumento', "1");
+		}
         if (isset($ejes)) {
             foreach ($ejes as $t) {
                 $opciones[count($opciones)] = array('value' => $t['id'], 'texto' => $t['nombre']);
@@ -122,46 +134,14 @@ switch ($task) {
 
         $form->addSelect('select', 'txt_instrumento', 'txt_instrumento', $opciones, INSTRUMENTO, $instrumento, '', 'onChange=submit();');
 
-        $form->addEtiqueta(TIPO_INSTRUMENTO);
-        $opciones = null;
-        $ejes = $planData->getTipoInstrumentos(' enc_tipo_id');
-        if (isset($ejes)) {
-            foreach ($ejes as $t) {
-                $opciones[count($opciones)] = array('value' => $t['id'], 'texto' => $t['nombre']);
-            }
-        }
-        $form->addSelect('select', 'txt_tipo', 'txt_tipo', $opciones, TIPO_INSTRUMENTO, $tipo, '', 'onChange=submit();');
+        $titulos = array(PLANEACION_REGION, PLANEACION_DEPARTAMENTO, PLANEACION_MUNICIPIO, CENTRO_POBLADO_BENEFICIARIO, NOMBRE_BENEFICIARIO,
+            INSTRUMENTO, PLANEACION_NUMERO_ENCUESTAS, PLANEACION_FECHA_INICIO, PLANEACION_FECHA_FIN,
+            PLANEACION_USUARIO, EJECUCION_ESTADO, EJECUCION_PORCENTAJE);
+        $planeaciones = $ejeData->getEjecucion($criterio, false);
 
-        if ($ref == null) {
-            $form->addEtiqueta(OPCION_NIVEL);
-            $opciones = null;
-            $ejes = $planData->getEncabezados();
-            if (isset($ejes)) {
-                foreach ($ejes as $t) {
-                    $opciones[count($opciones)] = array('value' => $t['id'], 'texto' => $t['nombre']);
-                }
-            }
-            $form->addSelect('select', 'txt_modulo', 'txt_modulo', $opciones, OPCION_NIVEL, $modu, '', 'onChange=submit();');
-            if ($nivel == 1) {
-                $titulos = array(PLANEACION_REGION, PLANEACION_DEPARTAMENTO, PLANEACION_MUNICIPIO, CENTRO_POBLADO_BENEFICIARIO, NOMBRE_BENEFICIARIO,
-                    OPCION_NIVEL, TIPO_INSTRUMENTO, INSTRUMENTO, PLANEACION_NUMERO_ENCUESTAS, PLANEACION_FECHA_INICIO, PLANEACION_FECHA_FIN,
-                    PLANEACION_USUARIO, EJECUCION_ESTADO, EJECUCION_PORCENTAJE);
-                $planeaciones = $ejeData->getEjecucion($criterio, false, true);
-            } else {
-                $titulos = array(PLANEACION_REGION, PLANEACION_DEPARTAMENTO, PLANEACION_MUNICIPIO, CENTRO_POBLADO_BENEFICIARIO, NOMBRE_BENEFICIARIO,
-                    INSTRUMENTO, PLANEACION_NUMERO_ENCUESTAS, PLANEACION_FECHA_INICIO, PLANEACION_FECHA_FIN,
-                    PLANEACION_USUARIO, EJECUCION_ESTADO, EJECUCION_PORCENTAJE);
-                $planeaciones = $ejeData->getEjecucion($criterio, false);
-            }
-        } else {
-            $titulos = array(PLANEACION_REGION, PLANEACION_DEPARTAMENTO, PLANEACION_MUNICIPIO, CENTRO_POBLADO_BENEFICIARIO, NOMBRE_BENEFICIARIO,
-                INSTRUMENTO, PLANEACION_NUMERO_ENCUESTAS, PLANEACION_FECHA_INICIO, PLANEACION_FECHA_FIN,
-                PLANEACION_USUARIO, EJECUCION_ESTADO, EJECUCION_PORCENTAJE);
-            $planeaciones = $ejeData->getEjecucion($criterio, false);
+        if ($nivel == 1) {
+            $form->addInputButton('button', 'btn_sincronizar', 'btn_sincronizar', BTN_SINCRONIZAR, 'button', 'onClick=location.href="?mod=' . $modulo . '&niv=' . $niv . "&task=syncEncuestaGeneral\"");
         }
-        $form->addInputButton('button', 'btn_sincronizar', 'btn_sincronizar', BTN_SINCRONIZAR, 'button', 'onClick=location.href="?mod=' . $modulo . '&niv=' . $niv . "&task=syncEncuestaGeneral\"");
-//        $form->addInputButton('button', 'btn_exportar', 'btn_exportar', BTN_EXPORTAR, 'button', 'onclick="exportar_excel_ejecucion();"');
-        $form->addInputText('hidden', 'txt_criterio', 'txt_criterio', '5', '5', $criterio, '', '');
         $form->writeForm();
 
         //Carga filtro de planeaciones
@@ -173,96 +153,84 @@ switch ($task) {
         $dt->setTitleTable(TABLA_EJECUCION);
 
         //OPCIONES DE GESTIÓN
-        $dt->setSeeLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=list&from=prelist&r=" . $region . "&dep=" . $departamento . "&mun=" . $municipio . "&est=" . $estado . "&eje=" . $eje);
+        $dt->setSeeLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=list&r=" . $region . "&dep=" . $departamento . "&mun=" . $municipio . "&est=" . $estado . "&ref=" . $ref);
 
         $dt->setType(1);
         $pag_crit = "";
         $dt->setPag(1, $pag_crit);
         $dt->writeDataTable($niv);
+        
+        $criterio = "1";
+        if($ref != NULL){
+            $criterio .= " AND i.idEncabezado = $ref";
+        }
+        $ejecucion_resumen = $ejeData->getResumenPlaneacion($criterio);
+        $dtr = new CHtmlDataTable();
+        $titulos_resumen = array(INSTRUMENTO, PLANEACION_NUMERO_ENCUESTAS, PLANEACION_NUMERO_EJECUTADO, PLANEACION_PORCENTAJE);
+        $dtr->setTitleTable(TABLA_RESUMEN_EJECUCION);
+        $dtr->setDataRows($ejecucion_resumen);
+        $dtr->setTitleRow($titulos_resumen);
+
+        $dtr->setType(1);
+        $dtr->setPag(1, $pag_crit);
+        $dtr->writeDataTable($niv);
         break;
 
     case 'list':
+        $pla_id = $_REQUEST['id_element'];
+
         $region = $_REQUEST['r'];
         $departamento = $_REQUEST['dep'];
         $municipio = $_REQUEST['mun'];
         $estado = $_REQUEST['est'];
-        $consecutivo_encuesta = $_REQUEST['txt_consecutivo_encuesta'];
-        $criterio = $_REQUEST['txt_criterio'];
-        $pla_id = $_REQUEST['id_element'];
-        if ($_REQUEST['from'] == 'prelist') {
-            $pla_id = $_REQUEST['id_element'];
-        }
-        if ($pla_id == '') {
-//            $plas = $ejeData->getEncuestas(" enc_id=".$_REQUEST['id_element'],false);
-//            $pla_id=$plas[count($plas)-1]['id_element'];
-        }
 
-        if (isset($pla_id) && $pla_id != "") {
-            if ($criterio == "") {
-                $criterio = " (enc.pla_id = " . $pla_id . ")";
-            } else {
-                $criterio .= " and (enc.pla_id = " . $pla_id . ")";
-            }
-        }
+        $criterio = "(enc.pla_id = " . $pla_id . ")";
+
         $form = new CHtmlForm();
         $form->setId('frm_list_ejecucion');
         $form->setMethod('post');
         $form->setClassEtiquetas('td_label');
+        $form->setMethod("POST");
+        $form->setAction("?mod=$modulo&niv=$niv&ref=$ref");
         $form->setOptions('autoClean', false);
-        $form->addInputText('hidden', 'hdd_id_element', 'hdd_id_element', '', '', $pla_id, '', '', '');
 
-        //filtro pre-list
         $form->addInputText('hidden', 'txt_region', 'txt_region', '', '', $region, '', '', '');
         $form->addInputText('hidden', 'txt_departamento', 'txt_departamento', '', '', $departamento, '', '', '');
         $form->addInputText('hidden', 'txt_municipio', 'txt_municipio', '', '', $municipio, '', '', '');
         $form->addInputText('hidden', 'txt_estado', 'txt_estado', '', '', $estado, '', '', '');
-        $form->addInputText('hidden', 'txt_eje', 'txt_eje', '', '', $eje, '', '', '');
 
-
-        $form->addInputButton('button', 'btn_consultar', 'btn_consultar', BTN_ATRAS, 'button', 'onClick=location.href="?mod=' . $modulo . '&niv=' . $niv . "&task=pre-list\"");
-//        $form->addInputButton('button', 'btn_consultar', 'btn_consultar', BTN_IMPORTAR, 'button', 'onclick="importar_excel_ejecucion(\'frm_list_ejecucion\',\'' . $pla_id . '\');"');
-//        $form->addInputButton('button', 'btn_exportar', 'btn_exportar', BTN_EXPORTAR, 'button', 'onclick="exportar_encuesta();"');
-//        $form->addInputButton('button', 'btn_excel', 'btn_excel', 'EXCEL', 'button', 'onclick="exportar_encuestas_excel();"');
+        $form->addInputButton('submit', 'btn_atras', 'btn_atras', BTN_ATRAS, 'button', '');
         $form->writeForm();
 
-        $ejecuciones_tb = $ejeData->getEncuestas($criterio, false);
+        $ejecuciones_tb = $ejeData->getEncuestas($criterio);
         $dt = new CHtmlDataTable();
         $titulos_ejecucion = array(EJECUCION_CONSECUTIVO_ENCUESTA,
-            //EJECUCION_DOCUMENTO_SOPORTE,
-            EJECUCION_FECHA, EJECUCION_CC, EJECUCION_MCI, EJECUCION_RF, EJECUCION_VI, EJECUCION_RI, EJECUCION_MEI, EJECUCION_ESTADO);
+            EJECUCION_FECHA, EJECUCION_CC, EJECUCION_MCI,
+            EJECUCION_RF, EJECUCION_VI, EJECUCION_RI,
+            EJECUCION_MEI, EJECUCION_ESTADO);
         $dt->setDataRows($ejecuciones_tb);
         $dt->setTitleRow($titulos_ejecucion);
         $dt->setTitleTable(TABLA_EJECUCION);
 
-        //OPCIONES DE GESTIÓN
-        //Las opciones de gestión corresponden a Agregar, Editar, Borrar, Editar Encuesta y Borrar Encuesta.
-        $dt->setDigitalizationLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=add&pla=$pla_id");
-        $dt->setEditLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=edit&pla=$pla_id");
-//        $dt->setDeleteLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=delete");
-        $otros = array('link' => "?mod=" . $modulo . "&niv=" . $niv . "&task=addEncuesta&idPlaneacion=" . $pla_id, 'img' => 'hcalc.png', 'alt' => ALT_AGREGAR_ENCUESTA);
+        $otros = array('link' => "?mod=" . $modulo . "&niv=" . $niv . "&task=addEncuesta&idPlaneacion=" . $pla_id . "&ref=" . $ref, 'img' => 'hcalc.png', 'alt' => ALT_AGREGAR_ENCUESTA);
         $dt->addOtrosLink($otros);
-        $otros = array('link' => "?mod=" . $modulo . "&niv=" . $niv . "&task=deleteEncuesta&pla=" . $pla_id, 'img' => 'delete.png', 'alt' => ALT_AGREGAR_ENCUESTA);
-        $dt->addOtrosLink($otros);
-        $otros = array('link' => "?mod=" . $modulo . "&niv=" . $niv . "&task=syncEncuesta&pla=".$pla_id, 'img' => 'cubrimiento.gif', 'alt' => ALT_SYNC_ENCUESTA);
-        $dt->addOtrosLink($otros);
+
+        if ($niv == 1) {
+            //OPCIONES DE GESTIÓN
+            //Las opciones de gestión corresponden a Agregar, Editar, Borrar, Editar Encuesta y Borrar Encuesta.
+            $dt->setDigitalizationLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=add&pla=$pla_id");
+            $dt->setEditLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=edit&pla=$pla_id");
+            $otros = array('link' => "?mod=" . $modulo . "&niv=" . $niv . "&task=deleteEncuesta&pla=" . $pla_id, 'img' => 'delete.png', 'alt' => ALT_AGREGAR_ENCUESTA);
+            $dt->addOtrosLink($otros);
+            $otros = array('link' => "?mod=" . $modulo . "&niv=" . $niv . "&task=syncEncuesta&pla=" . $pla_id, 'img' => 'cubrimiento.gif', 'alt' => ALT_SYNC_ENCUESTA);
+            $dt->addOtrosLink($otros);
+        }
+
 
         $dt->setType(1);
         $pag_crit = "";
         $dt->setPag(1, $pag_crit);
         $dt->writeDataTable(1);
-
-        //Inicio tabla resumen
-        //Obtener datos resumen
-//        $ejecucion_resumen = $ejeData->getResumenEjecucion($criterio, false, 75);
-//        $dtr = new CHtmlDataTable();
-//        $titulos_resumen = array(EJECUCION_N_PVD, EJECUCION_N_KVD, EJECUCION_N_IP, EJECUCUION_N_BA, EJECUCION_PORCENTAJE);
-//        $dtr->setTitleTable(TABLA_RESUMEN_EJECUCION);
-//        $dtr->setDataRows($ejecucion_resumen);
-//        $dtr->setTitleRow($titulos_resumen);
-//
-//        $dtr->setType(2);
-//        $dtr->setPag(1, $pag_crit);
-//        $dtr->writeDataTable($niv);
         break;
 
     case 'syncPlaneacion':
@@ -270,81 +238,80 @@ switch ($task) {
         $form->setId('frm_sync_planeacion');
         $form->setMethod('post');
         $form->writeForm();
-        $contEnc=0;
-        $errores=0;
+        $contEnc = 0;
+        $errores = 0;
         $planeacionesSync = $ejeData->getSyncPlaneaciones($id_usuario);
 
-        $client = new SoapClient(DIRECCION_WEB_SERVICE_SINCRONIZACION,array('encoding'=>'ISO-8859-1'));
+        $client = new SoapClient(DIRECCION_WEB_SERVICE_SINCRONIZACION, array('encoding' => 'ISO-8859-1'));
         // Paramters in PHP are passed via associative arrays
-        $password= $ejeData->consultarPassUsuario($id_usuario);        
-        $params = array("user"=>$id_usuario, "pass"=>$password, "data"=>$planeacionesSync);
+        $password = $ejeData->consultarPassUsuario($id_usuario);
+        $params = array("user" => $id_usuario, "pass" => $password, "data" => $planeacionesSync);
 
         $result = $client->sincronizarPlaneacion($params);
         $planeacionSync = $result->planeaciones;
         $ejecucionSync = $result->encuestas;
-        $cont=0;
-        while($cont<count($planeacionSync)){
-            $plaId          =$planeacionSync[$cont]->pla_id;
-            $beneficiario   =$planeacionSync[$cont]->ben_id;
-            $instrumento    =$planeacionSync[$cont]->ins_id;
-            $inicio         =$planeacionSync[$cont]->pla_fecha_inicio;
-            $fin            =$planeacionSync[$cont]->pla_fecha_fin;
-            $numero         =$planeacionSync[$cont]->pla_numero_encuestas;
-            $usuario        =$planeacionSync[$cont]->usu_id;
-            $municipio      =$planeacionSync[$cont]->mun_id;
-            
+        $cont = 0;
+        while ($cont < count($planeacionSync)) {
+            $plaId = $planeacionSync[$cont]->pla_id;
+            $beneficiario = $planeacionSync[$cont]->ben_id;
+            $instrumento = $planeacionSync[$cont]->ins_id;
+            $inicio = $planeacionSync[$cont]->pla_fecha_inicio;
+            $fin = $planeacionSync[$cont]->pla_fecha_fin;
+            $numero = $planeacionSync[$cont]->pla_numero_encuestas;
+            $usuario = $planeacionSync[$cont]->usu_id;
+            $municipio = $planeacionSync[$cont]->mun_id;
+
             $planData->insertPlaneacionSync($beneficiario, $instrumento, $inicio, $fin, $numero, $usuario);
         }
-        $cont=0;
-        while($cont<count($ejecucionSync)){
-            $enc_id         =$ejecucionSync[$cont]->enc_id;
-            $pla_id         =$ejecucionSync[$cont]->pla_id;
-            $enc_consecutivo=$ejecucionSync[$cont]->enc_consecutivo;
-            $usu_id         =$ejecucionSync[$cont]->usu_id;
-            
+        $cont = 0;
+        while ($cont < count($ejecucionSync)) {
+            $enc_id = $ejecucionSync[$cont]->enc_id;
+            $pla_id = $ejecucionSync[$cont]->pla_id;
+            $enc_consecutivo = $ejecucionSync[$cont]->enc_consecutivo;
+            $usu_id = $ejecucionSync[$cont]->usu_id;
+
             $ejeData->insertEjecucionSync($enc_id, $enc_consecutivo, $pla_id, $usu_id);
         }
-        
-        $mens= "Se sincronizaron ".(count($planeacionSync))." planeaciones con ".(count($planeacionSync))." encuestas";
+
+        $mens = "Se sincronizaron " . (count($planeacionSync)) . " planeaciones con " . (count($planeacionSync)) . " encuestas";
         echo $html->generaAviso($mens, "?mod=" . $modulo . "&niv=" . $niv . "&task=pre-list");
-        
+
         break;
-        
+
     case 'syncEncuestaGeneral':
         $form = new CHtmlForm();
         $form->setId('frm_sync_enc_general');
         $form->setMethod('post');
         $form->writeForm();
-        $contEnc=0;
-        $errores=0;
+        $contEnc = 0;
+        $errores = 0;
         $encuestasSync = $ejeData->getSyncEncuestas(1);
-        while($contEnc<count($encuestasSync)){
-            $cont=0;
+        while ($contEnc < count($encuestasSync)) {
+            $cont = 0;
             $data = null;
             $respuestas = $ejeData->getRespuestas($encuestasSync[$contEnc]['encuesta']);
-            while($cont<count($respuestas)){
-                $data[$cont] = new respuesta($respuestas[$cont]['pregunta'],
-                        $respuestas[$cont]['encuesta'], ($respuestas[$cont]['respuesta']));
+            while ($cont < count($respuestas)) {
+                $data[$cont] = new respuesta($respuestas[$cont]['pregunta'], $respuestas[$cont]['encuesta'], ($respuestas[$cont]['respuesta']));
                 $cont++;
             }
-            $client = new SoapClient(DIRECCION_WEB_SERVICE_SINCRONIZACION,array('encoding'=>'ISO-8859-1'));
+            $client = new SoapClient(DIRECCION_WEB_SERVICE_SINCRONIZACION, array('encoding' => 'ISO-8859-1'));
             // Paramters in PHP are passed via associative arrays
-            $password= $ejeData->consultarPassUsuario($id_usuario);        
-            $params = array("user"=>$id_usuario, "pass"=>$password, "data"=>$data);
-            
+            $password = $ejeData->consultarPassUsuario($id_usuario);
+            $params = array("user" => $id_usuario, "pass" => $password, "data" => $data);
+
             $result = $client->sicronizar($params);
-            if(!strpos($mens,'error')|| !strpos($mens,'Error')){
+            if (!strpos($mens, 'error') || !strpos($mens, 'Error')) {
                 $ejeData->setSyncEncuesta($encuestasSync[$contEnc]['encuesta'], 0);
-            }else{
+            } else {
                 $errores++;
             }
             $contEnc++;
         }
-        $mens= "Se sincronizaron ".(count($encuestasSync)-$errores)." encuestas";
+        $mens = "Se sincronizaron " . (count($encuestasSync) - $errores) . " encuestas";
         echo $html->generaAviso($mens, "?mod=" . $modulo . "&niv=" . $niv . "&task=pre-list");
-        
+
         break;
-        
+
     case 'syncEncuesta':
         $id_element = $_REQUEST['id_element'];
         $planeacion = $_REQUEST['pla'];
@@ -353,27 +320,26 @@ switch ($task) {
         $form->setMethod('post');
         $form->writeForm();
         $data = null;
-        $cont=0;
+        $cont = 0;
         $respuestas = $ejeData->getRespuestas($id_element);
-        while($cont<count($respuestas)){
-            $data[$cont] = new respuesta($respuestas[$cont]['pregunta'],
-                    $respuestas[$cont]['encuesta'], ($respuestas[$cont]['respuesta']));
+        while ($cont < count($respuestas)) {
+            $data[$cont] = new respuesta($respuestas[$cont]['pregunta'], $respuestas[$cont]['encuesta'], ($respuestas[$cont]['respuesta']));
             $cont++;
         }
-        $client = new SoapClient(DIRECCION_WEB_SERVICE_SINCRONIZACION,array('encoding'=>'ISO-8859-1'));
+        $client = new SoapClient(DIRECCION_WEB_SERVICE_SINCRONIZACION, array('encoding' => 'ISO-8859-1'));
         // Paramters in PHP are passed via associative arrays
-        $password= $ejeData->consultarPassUsuario($id_usuario);        
-        $params = array("user"=>$id_usuario, "pass"=>$password, "data"=>$data);
+        $password = $ejeData->consultarPassUsuario($id_usuario);
+        $params = array("user" => $id_usuario, "pass" => $password, "data" => $data);
 
         $result = $client->sicronizar($params);
-        $mens= "" . $result->return;
-        if(!strpos($mens,'error')|| !strpos($mens,'Error')){
+        $mens = "" . $result->return;
+        if (!strpos($mens, 'error') || !strpos($mens, 'Error')) {
             $ejeData->setSyncEncuesta($id_element, 0);
         }
         echo $html->generaAviso($mens, "?mod=" . $modulo . "&niv=" . $niv . "&task=list&pla=$planeacion&id_element=" . $planeacion);
         break;
-        
-        
+
+
     case 'deleteEncuesta':
         $id_element = $_REQUEST['id_element'];
         $planeacion = $_REQUEST['pla'];
@@ -506,7 +472,6 @@ switch ($task) {
         }
         break;
 
-
     case 'add':
         $id_element = $_REQUEST['id_element'];
         $planeacion = $_REQUEST['pla'];
@@ -610,8 +575,8 @@ switch ($task) {
             }
         }
         if ($seccionActual == count($secciones)) {
-            $ejeData->completarEncuesta($_SESSION['encuesta']);
-            echo $html->generaAviso(EJECUCION_MNS_AGREGACION, "?mod=" . $modulo . "&niv=" . $niv . "&task=list&id_element=" . $idPlaneacion);
+            $ejeData->completarEncuesta($idEncuesta);
+            echo $html->generaAviso(EJECUCION_MNS_AGREGACION, "?mod=" . $modulo . "&niv=" . $niv . "&task=list&id_element=" . $idPlaneacion . "&ref=$ref");
         } else {
             $preguntas = $daoInstrumentos->getPreguntas($secciones[$seccionActual]);
             $numeroPreguntas = $daoInstrumentos->getNumeroPreguntasByInstrumento($idInstrumento);
@@ -637,7 +602,7 @@ switch ($task) {
             <nav>
                 <ul class="pagination pagination-lg">
                     <li>
-                        <a href="?mod=genEjecucion&task=addEncuesta&seccionActual=0&id_element=<?= $idEncuesta ?>&niv=<?= $niv ?>&pagina=0&idPlaneacion=<?= $idPlaneacion ?>" aria-label="Previous">
+                        <a href="?mod=genEjecucion&task=addEncuesta&seccionActual=0&id_element=<?= $idEncuesta ?>&niv=<?= $niv ?>&pagina=0&idPlaneacion=<?= $idPlaneacion ?>&ref=<?= $ref ?>" aria-label="Previous">
                             <span aria-hidden="true">&laquo;</span>
                         </a>
                     </li>
@@ -647,11 +612,11 @@ switch ($task) {
                             <?php } else { ?>
                             <li>
                             <?php } ?>
-                            <a href="?mod=genEjecucion&task=addEncuesta&seccionActual=<?= ($j * PAGINAS) ?>&id_element=<?= $idEncuesta ?>&niv=<?= $niv ?>&pagina=<?= ($j) ?>&idPlaneacion=<?= $idPlaneacion ?>"><?= ($j + 1) ?></a>
+                            <a href="?mod=genEjecucion&task=addEncuesta&seccionActual=<?= ($j * PAGINAS) ?>&id_element=<?= $idEncuesta ?>&niv=<?= $niv ?>&pagina=<?= ($j) ?>&idPlaneacion=<?= $idPlaneacion ?>&ref=<?= $ref ?>"><?= ($j + 1) ?></a>
                         </li>
                     <?php } ?>
                     <li>
-                        <a href="?mod=genEjecucion&task=addEncuesta&seccionActual=<?= ($numeroSecciones - 1) ?>&id_element=<?= $idEncuesta ?>&niv=<?= $niv ?>&pagina=<?= ($numeroPaginas - 1) ?>&idPlaneacion=<?= $idPlaneacion ?>" aria-label="Next">
+                        <a href="?mod=genEjecucion&task=addEncuesta&seccionActual=<?= ($numeroSecciones - 1) ?>&id_element=<?= $idEncuesta ?>&niv=<?= $niv ?>&pagina=<?= ($numeroPaginas - 1) ?>&idPlaneacion=<?= $idPlaneacion ?>&ref=<?= $ref ?>" aria-label="Next">
                             <span aria-hidden="true">&raquo;</span>
                         </a>
                     </li>
@@ -672,7 +637,7 @@ switch ($task) {
                         echo "class=active style='background: rgba(54, 25, 25, .5)'";
                     }
                     ?>>
-                        <a href="?mod=<?= $modulo ?>&niv=<?= $niv ?>&task=addEncuesta&seccionActual=<?= $i ?>&id_element=<?= $idEncuesta ?>&idPlaneacion=<?= $idPlaneacion ?>&pagina=<?= ($pagina) ?>">
+                        <a href="?mod=<?= $modulo ?>&niv=<?= $niv ?>&task=addEncuesta&seccionActual=<?= $numeroSeccion ?>&id_element=<?= $idEncuesta ?>&idPlaneacion=<?= $idPlaneacion ?>&pagina=<?= ($pagina) ?>&ref=<?= $ref ?>">
                             <?php
                             if ($seccionActual == $numeroSeccion) {
                                 echo "<strong>";
@@ -688,11 +653,11 @@ switch ($task) {
             </ul>
             <?php
             $nuevaPagina = $pagina;
-            if(($seccionActual+1) % PAGINAS == 0){
+            if (($seccionActual + 1) % PAGINAS == 0) {
                 $nuevaPagina = $pagina + 1;
             }
             ?>
-            <form id="frm_add_encuesta" enctype="multipart/form-data" method="post" action="?mod=<?= $modulo ?>&niv=<?= $niv ?>&task=addEncuesta&id_element=<?= $idEncuesta ?>&seccionActual=<?= ($seccionActual + 1) ?>&idPlaneacion=<?= $idPlaneacion ?>&pagina=<?= $nuevaPagina ?>">
+            <form id="frm_add_encuesta" enctype="multipart/form-data" method="post" action="?mod=<?= $modulo ?>&niv=<?= $niv ?>&task=addEncuesta&id_element=<?= $idEncuesta ?>&seccionActual=<?= ($seccionActual + 1) ?>&idPlaneacion=<?= $idPlaneacion ?>&pagina=<?= $nuevaPagina ?>&ref=<?= $ref ?>">
                 <?php
                 $j = 0;
                 foreach ($preguntas as $pregunta) {
@@ -862,7 +827,7 @@ switch ($task) {
                 <input type="hidden" value="<?= $idPreguntas ?>" name="idPreguntasR" id="idPreguntasR"/>
                 <input type="hidden" value="<?= $idEncuesta ?>" name="id_element" id="id_element"/>
                 <input type="hidden" value="<?= count($preguntas) ?>" name="numeroPreguntas" id="numeroPreguntas"/>
-                <input type="button" value="<?= BTN_ATRAS; ?>" onclick="location.href = '?mod=<?= $modulo ?>&niv=<?= $niv ?>&id_element=<?= $idPlaneacion ?>&task=list'">
+                <input type="button" value="<?= BTN_ATRAS; ?>" onclick="location.href = '?mod=<?= $modulo ?>&niv=<?= $niv ?>&id_element=<?= $idPlaneacion ?>&task=list&ref=<?= $ref ?>'">
                 <input type="submit" value=<?= BTN_CONTINUAR; ?>>
             </form>
 

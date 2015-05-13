@@ -13,6 +13,8 @@ define('PLANEACION_MUNICIPIO', 'Municipio /ANM');
 define('PLANEACION_EJE', 'Eje');
 define('PLANEACION_EXPORTAR', 'Exportar');
 define('PLANEACION_NUMERO_ENCUESTAS', 'Número Encuestas');
+define('PLANEACION_NUMERO_EJECUTADO', 'Encuestas Ejecutadas');
+define('PLANEACION_PORCENTAJE', 'Porcentaje de Ejecución');
 define('ERROR_PLANEACION_CODIGO_EJE', '**Digite codigo eje.');
 define('ERROR_PLANEACION_REGION', '**Digite la región.');
 define('ERROR_PLANEACION_DEPARTAMENTO', '**Digite el departamento.');

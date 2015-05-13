@@ -60,9 +60,9 @@ class COtroSiData {
                 $otrosSi[$cont]['descripcion'] = $w['descripcion'];
                 $otrosSi[$cont]['valor'] = $w['valor'];
                 $otrosSi[$cont]['fecha'] = $w['fecha'];
-                $otrosSi[$cont]['soporte'] = "<a href='" . RUTA_DOCUMENTOS . "/soporteContrato/" . $w['documentoSoporte'] . "' >" . $w['documentoSoporte'] . "</a>";
                 $otrosSi[$cont]['observaciones'] = $w['observaciones'];
-                $cont++;
+                $otrosSi[$cont]['soporte'] = "<a href='" . RUTA_DOCUMENTOS . "/soporteContrato/" . $w['documentoSoporte'] . "' >" . $w['documentoSoporte'] . "</a>";
+				$cont++;
             }
         }
         return $otrosSi;

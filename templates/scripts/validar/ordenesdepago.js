@@ -310,11 +310,6 @@ function validar_editar_ordendepago() {
 
         }
 
-        if (document.getElementById('txt_valor_total_orden_edit').value == '' || !validarEntero(document.getElementById('txt_valor_total_orden_edit').value) || ! validarRealMayor(document.getElementById('txt_valor_total_orden_edit').value,0)) {
-            mostrarDiv('error_valor_unitario');
-            return false;
-        }
-
 
         if (document.getElementById('sel_estado_edit').value == '4') {
             if (document.getElementById('fecha_pago_orden_edit').value == '') {
@@ -323,14 +318,7 @@ function validar_editar_ordendepago() {
             }
         }
 
-        if (document.getElementById('txt_observaciones_edit').value == '') {
-            mostrarDiv('error_observaciones');
-            return false;
-        }
-//        if (document.getElementById('file_orden_edit').value == '') {
-//            mostrarDiv('error_archivo');
-//            return false;
-//        }
+        
         if (document.getElementById('sel_moneda_edit').value != '1') {
 
             cambiacoma('txt_tasa_edit');

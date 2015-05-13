@@ -73,6 +73,7 @@ class CBitacoraData {
      */
     public function insertBitacora($bitacora) {
         $tabla = "bitacora";
+        $columnas = $this->db->getCampos($tabla);
         $campos = "idUsuario,idBeneficiario,descripcionActividad,fechaInicio,fechaFin";
         $valores = "'" . $bitacora->getUsuario() . "','"
                 . $bitacora->getBeneficiario() . "','"
@@ -85,6 +86,7 @@ class CBitacoraData {
     
     public function insertBitacoraSync($bitacora) {
         $tabla = "bitacora";
+        $columnas = $this->db->getCampos($tabla);
         $campos = "idBitacora,idUsuario,idBeneficiario,descripcionActividad,fechaInicio,fechaFin";
         $valores = "'" . $bitacora->getId() . "','"
                 . $bitacora->getUsuario() . "','"

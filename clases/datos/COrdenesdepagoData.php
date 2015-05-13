@@ -21,30 +21,19 @@ class COrdenesdepagoData {
 
     function obtenerOrdenesdepago($parametro) {
         $ordenes = null;
-        if ($parametro != '') {
-            $sql = "SELECT Id_Orden_Pago, cobro_proveedor_reintegro, Descripcion_Tipo, Descripcion_Actividad ,Nombre_Prove,Descripcion_Moneda,Tasa_Orden,
-                    Numero_Orden_Pago, Fecha_Orden_Pago, Numero_Factura,valor_total,estado_orden, Fecha_Pago_Orden
-                    ,Archivo_Orden, Observaciones_Orden from ordenesdepago o 
-	
-				inner join actividades_tipo at on o.Id_Tipo_Actividad = at.Id_Tipo
-				inner join actividades a on o.Id_Actividad = a.Id_Actividad
-				inner join proveedores p on o.Id_Proveedor = p.Id_Prove
-				inner join monedas m on o.Id_Moneda_Orden = m.Id_Moneda	
-				inner join estados_ordenes eo on o.Id_Estado_Orden = eo.Id_estado_Ordenes
-                                
-        WHERE $parametro";
-        } else {
-            $sql = "SELECT Id_Estado_Orden, Id_Orden_Pago, cobro_proveedor_reintegro, Descripcion_Tipo, Descripcion_Actividad ,Nombre_Prove,Descripcion_Moneda,Tasa_Orden,
-                    Numero_Orden_Pago, Fecha_Orden_Pago, Numero_Factura,valor_total,estado_orden, Fecha_Pago_Orden
-                    ,Archivo_Orden, Observaciones_Orden from ordenesdepago o 
-	
-				inner join actividades_tipo at on o.Id_Tipo_Actividad = at.Id_Tipo
-				inner join actividades a on o.Id_Actividad = a.Id_Actividad
-				inner join proveedores p on o.Id_Proveedor = p.Id_Prove
-				inner join monedas m on o.Id_Moneda_Orden = m.Id_Moneda	
-				inner join estados_ordenes eo on o.Id_Estado_Orden = eo.Id_estado_Ordenes";
-        }
-
+        $sql = "SELECT Id_Orden_Pago, cobro_proveedor_reintegro, "
+               . "Descripcion_Tipo, Descripcion_Actividad , "
+               . "Nombre_Prove,Descripcion_Moneda,Tasa_Orden, "
+               . "Numero_Orden_Pago, Fecha_Orden_Pago, Numero_Factura,"
+               . "valor_total,estado_orden, Fecha_Pago_Orden, "
+               . "Archivo_Orden, Observaciones_Orden, amortizacion "
+               . "from ordenesdepago o "
+               . "inner join actividades_tipo at on o.Id_Tipo_Actividad = at.Id_Tipo "
+	       . "inner join actividades a on o.Id_Actividad = a.Id_Actividad "
+	       . "inner join proveedores p on o.Id_Proveedor = p.Id_Prove "
+	       . "inner join monedas m on o.Id_Moneda_Orden = m.Id_Moneda "	
+	       . "inner join estados_ordenes eo on o.Id_Estado_Orden = eo.Id_estado_Ordenes "                  
+               . "WHERE $parametro";
         $r = $this->database->ejecutarConsulta($sql);
         if ($r) {
             $cont = 0;
@@ -62,23 +51,24 @@ class COrdenesdepagoData {
                 }
                 $ordenes[$cont]['numerorden'] = $w['Numero_Orden_Pago'];
                 $ordenes[$cont]['fecha'] = $w['Fecha_Orden_Pago'];
-                $ordenes[$cont]['estado'] = $w['estado_orden'];
+                //$ordenes[$cont]['estado'] = $w['estado_orden'];
                 $ordenes[$cont]['tipoactividad'] = $w['Descripcion_Tipo'];
                 $ordenes[$cont]['actividad'] = $w['Descripcion_Actividad'];
                 $ordenes[$cont]['proveedor'] = $w['Nombre_Prove'];
                 $ordenes[$cont]['numerofactura'] = $w['Numero_Factura'];
                 if (isset($w['cobro_proveedor_reintegro'])) {
                     if ($w['cobro_proveedor_reintegro'] == 'null') {
-                        $ordenes[$cont]['reintegro'] = NO_APLICA;
+                        //$ordenes[$cont]['reintegro'] = NO_APLICA;
                     } else {
-                        $ordenes[$cont]['reintegro'] = $w['cobro_proveedor_reintegro'];
+                        //$ordenes[$cont]['reintegro'] = $w['cobro_proveedor_reintegro'];
                     }
                 } else {
-                    $ordenes[$cont]['reintegro'] = NO_APLICA;
+                    //$ordenes[$cont]['reintegro'] = NO_APLICA;
                 }
                 $ordenes[$cont]['moneda'] = $w['Descripcion_Moneda'];
                 $ordenes[$cont]['tasa'] = $w['Tasa_Orden'];
-                $ordenes[$cont]['valortotal'] = $w['valor_total'];
+                $ordenes[$cont]['valortotal'] = $w['valor_total']*$w['Tasa_Orden'];
+                $ordenes[$cont]['amortizacion'] = $w['amortizacion'];
                 if ($w['Id_Estado_Orden'] == 4) {
                     $ordenes[$cont]['fechapago'] = $w['Fecha_Pago_Orden'];
                 } else {
@@ -206,18 +196,15 @@ class COrdenesdepagoData {
         return $monedas;
     }
 
-    function insertarOrdendePago($id, $tipoactividad, $actividad, $numerodeorden, 
-                                 $fecha, $numerofactura, $proveedor, $moneda, $tasa, 
-                                 $valortotal, $estado, $fechapago, $observaciones, 
-                                 $cuenta_cobro, $archivo, $contrato) {
+    function insertarOrdendePago($id, $tipoactividad, $actividad, $numerodeorden, $fecha, $numerofactura, $proveedor, $moneda, $tasa, $valortotal, $estado, $fechapago, $observaciones, $cuenta_cobro, $archivo, $contrato, $amortizacion) {
         $tabla = "ordenesdepago";
         $campos = "Id_Orden_Pago,Id_Tipo_Actividad,Id_Actividad,Numero_Orden_Pago,Fecha_Orden_Pago,"
-		  . "Numero_Factura,Id_Proveedor,Id_Moneda_Orden,Tasa_Orden,"
-                  . "valor_total,Id_Estado_Orden,Fecha_Pago_Orden,Observaciones_Orden,cobro_proveedor_reintegro,Archivo_Orden,contrato_idContrato";
+                . "Numero_Factura,Id_Proveedor,Id_Moneda_Orden,Tasa_Orden,"
+                . "valor_total,Id_Estado_Orden,Fecha_Pago_Orden,Observaciones_Orden,cobro_proveedor_reintegro,Archivo_Orden,contrato_idContrato, amortizacion";
         $valores = "'" . $id . "','" . $tipoactividad . "','" . $actividad . "'
-                   ,'" . $numerodeorden . "','" . $fecha . "','" . $numerofactura . "','" . $proveedor . "','" 
-                    . $moneda . "','" . $tasa . "','" . $valortotal . "','" 
-                    . $estado . "','" . $fechapago . "','" . $observaciones . "'," . $cuenta_cobro . ",'" . $archivo . "','" . $contrato . "'";
+                   ,'" . $numerodeorden . "','" . $fecha . "','" . $numerofactura . "','" . $proveedor . "','"
+                . $moneda . "','" . $tasa . "','" . $valortotal . "','"
+                . $estado . "','" . $fechapago . "','" . $observaciones . "'," . $cuenta_cobro . ",'" . $archivo . "','" . $contrato . "','" . $amortizacion . "'";
         $r = $this->database->insertarRegistro($tabla, $campos, $valores);
         return $r;
     }
@@ -271,26 +258,21 @@ class COrdenesdepagoData {
         return $r;
     }
 
-    function ActualizarOrdendePago($id, $tipo_actividad_edit, $actividad_edit, 
-                                   $numerordendepago_edit, $fechaorden_edit, 
-                                   $numerofactura_edit, $proveedor_edit, 
-                                   $moneda_edit, $tasaorden_edit, $valortotal_edit, 
-                                   $estado_edit, $fechapagoorden_edit, $observacionesorden_edit, 
-                                   $cuenta_cobro, $contrato, $archivo) {
+    function ActualizarOrdendePago($id, $tipo_actividad_edit, $actividad_edit, $numerordendepago_edit, $fechaorden_edit, $numerofactura_edit, $proveedor_edit, $moneda_edit, $tasaorden_edit, $valortotal_edit, $estado_edit, $fechapagoorden_edit, $observacionesorden_edit, $cuenta_cobro, $contrato, $archivo, $amortizacion) {
         $tabla = "ordenesdepago";
-        $campos = array('Id_Tipo_Actividad', 'Id_Actividad', 'Numero_Orden_Pago', 
-                        'Fecha_Orden_Pago', 'Numero_Factura', 'Id_Proveedor', 
-                        'Id_Moneda_Orden', 'Tasa_Orden', 'valor_total', 
-                        'Id_Estado_Orden', 'Fecha_Pago_Orden', 
-                        'Observaciones_Orden', 'cobro_proveedor_reintegro', 
-                        'Archivo_Orden', 'contrato_idContrato');
-        $valores = array("'" . $tipo_actividad_edit . "'", "'" . $actividad_edit . "'", 
-                         "'" . $numerordendepago_edit . "'", "'" . $fechaorden_edit . "'", 
-                         "'" . $numerofactura_edit . "'", "'" . $proveedor_edit . "'", 
-                         "'" . $moneda_edit . "'", "'" . $tasaorden_edit . "'", 
-                         "'" . $valortotal_edit . "'", "'" . $estado_edit . "'", 
-                         "'" . $fechapagoorden_edit . "'", "'" . $observacionesorden_edit . "'", 
-                         $cuenta_cobro, "'" . $archivo . "'", "'". $contrato. "'");
+        $campos = array('Id_Tipo_Actividad', 'Id_Actividad', 'Numero_Orden_Pago',
+            'Fecha_Orden_Pago', 'Numero_Factura', 'Id_Proveedor',
+            'Id_Moneda_Orden', 'Tasa_Orden', 'valor_total',
+            'Id_Estado_Orden', 'Fecha_Pago_Orden',
+            'Observaciones_Orden', 'cobro_proveedor_reintegro',
+            'Archivo_Orden', 'contrato_idContrato', 'amortizacion');
+        $valores = array("'" . $tipo_actividad_edit . "'", "'" . $actividad_edit . "'",
+            "'" . $numerordendepago_edit . "'", "'" . $fechaorden_edit . "'",
+            "'" . $numerofactura_edit . "'", "'" . $proveedor_edit . "'",
+            "'" . $moneda_edit . "'", "'" . $tasaorden_edit . "'",
+            "'" . $valortotal_edit . "'", "'" . $estado_edit . "'",
+            "'" . $fechapagoorden_edit . "'", "'" . $observacionesorden_edit . "'",
+            $cuenta_cobro, "'" . $archivo . "'", "'" . $contrato . "'", "'$amortizacion'");
         $condicion = "Id_Orden_Pago = " . $id;
         $r = $this->database->actualizarRegistro($tabla, $campos, $valores, $condicion);
         if ($r == "true") {

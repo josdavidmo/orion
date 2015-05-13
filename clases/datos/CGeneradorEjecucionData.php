@@ -22,7 +22,7 @@ class CGeneradorEjecucionData {
         }
     }
 
-    function consultarPassUsuario($id){
+    function consultarPassUsuario($id) {
         $sql = "SELECT usu_clave FROM usuario WHERE usu_id=$id";
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
@@ -31,8 +31,8 @@ class CGeneradorEjecucionData {
             }
         }
     }
-    
-    function setSyncEncuesta($id, $valor){
+
+    function setSyncEncuesta($id, $valor) {
         $tabla = "generador_encuesta";
         $campos = array('enc_sync');
         $valores = array($valor);
@@ -40,8 +40,8 @@ class CGeneradorEjecucionData {
         $r = $this->db->actualizarRegistro($tabla, $campos, $valores, $condicion);
         return $r;
     }
-    
-    function getSyncEncuestas($valor){
+
+    function getSyncEncuestas($valor) {
         $respuestas = null;
         $sql = "SELECT enc_id, enc_sync FROM generador_encuesta where enc_sync = $valor";
         $r = $this->db->ejecutarConsulta($sql);
@@ -55,22 +55,22 @@ class CGeneradorEjecucionData {
         }
         return $respuestas;
     }
-    
-    function getSyncPlaneaciones($usuario){
+
+    function getSyncPlaneaciones($usuario) {
         $respuestas = null;
         $sql = "SELECT pla_id FROM generador_planeacion where usu_id = $usuario";
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             $cont = 0;
             while ($w = mysql_fetch_array($r)) {
-                $respuestas[$cont] = $w['enc_id']."";
+                $respuestas[$cont] = $w['enc_id'] . "";
                 $cont++;
             }
         }
         return $respuestas;
     }
-    
-    function getRespuestas($id){
+
+    function getRespuestas($id) {
         $respuestas = null;
         $sql = "SELECT * FROM respuestas where idEncuesta = $id";
         $r = $this->db->ejecutarConsulta($sql);
@@ -85,8 +85,8 @@ class CGeneradorEjecucionData {
         }
         return $respuestas;
     }
-    
-    function codificarString($t){
+
+    function codificarString($t) {
         $t = str_replace('Ã¡', '00aacute00;', $t);
         $t = str_replace('Ã©', '00eacute00;', $t);
         $t = str_replace('Ã­', '00iacute00;', $t);
@@ -102,7 +102,7 @@ class CGeneradorEjecucionData {
         //echo $t."<hr> ";
         return $t;
     }
-    
+
     function getEncuestaEstados() {
         $preguntas = null;
         $sql = "SELECT ees_id, ees_nombre FROM encuesta_estado ";
@@ -121,10 +121,12 @@ class CGeneradorEjecucionData {
     function getEjecucion($criterio, $excel, $admin = false) {
         $planeacion = null;
 
-        $sql = "SELECT es.ees_nombre, g.pla_id, g.pla_numero_encuestas, b.nombre, DATEDIFF(CURDATE(),pla_fecha_fin) as dias,"
+        $sql = "SELECT g.pla_id, g.pla_numero_encuestas, b.nombre, DATEDIFF(CURDATE(),pla_fecha_fin) as dias,"
                 . " i.nombre AS instrumento, c.nombre as centro_poblado, m.mun_nombre,d.dep_nombre, r.der_nombre,"
                 . " g.pla_fecha_inicio, g.pla_fecha_fin, g.pla_numero_encuestas, "
-                . "CONCAT(u.usu_nombre,\" \",u.usu_apellido) AS usuario, o.opc_nombre, et.enc_tipo_nombre "
+                . "CONCAT(u.usu_nombre,\" \",u.usu_apellido) AS usuario, o.opc_nombre, et.enc_tipo_nombre, "
+                . "(SELECT count(e.enc_id) FROM generador_encuesta e WHERE e.pla_id = g.pla_id) as encuestas, "
+                . "(SELECT count(e.enc_id) FROM generador_encuesta e WHERE e.pla_id = g.pla_id AND e.ees_id) as encuestasCompletadas "
                 . "FROM generador_planeacion g "
                 . "INNER JOIN beneficiario b ON g.ben_id=b.idBeneficiario "
                 . "INNER JOIN centroPoblado c ON c.idCentroPoblado=b.idCentroPoblado "
@@ -133,161 +135,66 @@ class CGeneradorEjecucionData {
                 . "INNER JOIN departamento_region r ON d.der_id=r.der_id "
                 . "INNER JOIN instrumentos i ON g.ins_id=i.idInstrumento "
                 . "INNER JOIN usuario u ON g.usu_id=u.usu_id "
-                . "INNER JOIN encuesta_estado es ON es.ees_id=g.ees_id "
                 . "INNER JOIN opcion o ON i.idEncabezado=o.opc_id "
                 . "INNER JOIN encuesta_tipo et ON et.enc_tipo_id=i.idTipoEncuesta "
-                . "WHERE isnull(g.mun_id) AND $criterio";
-        echo $sql;
+                . "WHERE $criterio";
         $r = $this->db->ejecutarConsulta($sql);
         $estadoActualizado = null;
         $estado = null;
         if ($r) {
             $cont = 0;
             while ($w = mysql_fetch_array($r)) {
-                $sql2 = "SELECT count(*) FROM generador_encuesta WHERE pla_id = '" . $w['pla_id'] . "' and ees_id = 1 group by ees_id";
-                $r2 = $this->db->ejecutarConsulta($sql2);
-//                echo $sql2;
-                $w2 = mysql_fetch_array($r2);
                 $planeacion[$cont]['id_element'] = $w['pla_id'];
                 $planeacion[$cont]['der_nombre'] = $w['der_nombre'];
                 $planeacion[$cont]['dep_nombre'] = $w['dep_nombre'];
                 $planeacion[$cont]['mun_nombre'] = $w['mun_nombre'];
                 $planeacion[$cont]['centro_poblado'] = $w['centro_poblado'];
                 $planeacion[$cont]['beneficiario'] = $w['nombre'];
-                if ($admin) {
-                    $planeacion[$cont]['nivel'] = $w['opc_nombre'];
-                    $planeacion[$cont]['tipo'] = $w['enc_tipo_nombre'];
-                }
                 $planeacion[$cont]['instrumento'] = $w['instrumento'];
                 $planeacion[$cont]['pla_numero_encuestas'] = $w['pla_numero_encuestas'];
                 $planeacion[$cont]['pla_fecha_inicio'] = $w['pla_fecha_inicio'];
                 $planeacion[$cont]['pla_fecha_fin'] = $w['pla_fecha_fin'];
                 $planeacion[$cont]['usu_nombre'] = $w['usuario'];
-                $planeacion[$cont]['ees_nombre'] = $w['ees_nombre'];
-                $total = round(($w2['count(*)'] * 100) / $w['pla_numero_encuestas'], 0);
-                //calcular estado
-                $dias = $w['dias'];
-                if ($dias >= 0) {
-                    $estado = '2';
-                } else if ($dias < 0) {
-                    $estado = '3';
-                }
-                if ($excel == false) {
-                    if ($total <= 51) {
-                        $total = '<img src=./templates/img/ico/rojo.gif>' . $total . '%';
-                    } elseif ($total > 51 && $total <= 99) {
-                        $total = '<img src=./templates/img/ico/amarillo.gif>' . $total . '%';
+                $planeacion[$cont]['estado'] = '<img src=./templates/img/ico/verde.gif> Completo';
+                $ejecutado = ($w['encuestasCompletadas']/$w['encuestas']) * 100;
+                $ejecutado = round($ejecutado, 2);
+                if ($ejecutado != 100) {
+                    date_default_timezone_set('America/Bogota');
+                    $fechaActual = date("Y-m-d");
+                    if ($fechaActual <= $w['pla_fecha_fin']) {
+                        $planeacion[$cont]['estado'] = '<img src=./templates/img/ico/amarillo.gif> Vigente';
                     } else {
-                        $total = '<img src=./templates/img/ico/verde.gif>' . $total . '%';
-                        $estado = '1';
-                    }
-                } else {
-                    if ($total <= 51) {
-                        $total = $total . '%';
-                    } elseif ($total > 51 && $total <= 99) {
-                        $total = $total . '%';
-                    } else {
-                        $total = $total . '%';
-                        $estado = '1';
+                        $planeacion[$cont]['estado'] = '<img src=./templates/img/ico/rojo.gif> Vencido';
                     }
                 }
-                $planeacion[$cont]['porcentaje_ejecucion'] = $total;
+                $planeacion[$cont]['porcentaje_ejecucion'] = "$ejecutado %";
                 $cont++;
-                //mantener actualizado el estado
-                $this->db->actualizarRegistro('planeacion', array('ees_id'), $estado, (" pla_id = " . $w['pla_id']));
             }
         }
-        $sql = "SELECT es.ees_nombre, g.pla_id, g.pla_numero_encuestas, DATEDIFF(CURDATE(),pla_fecha_fin) as dias,"
-                . " i.nombre AS instrumento,  m.mun_nombre,d.dep_nombre, r.der_nombre,"
-                . " g.pla_fecha_inicio, g.pla_fecha_fin, g.pla_numero_encuestas, "
-                . "CONCAT(u.usu_nombre,\" \",u.usu_apellido) AS usuario, o.opc_nombre, et.enc_tipo_nombre "
-                . "FROM generador_planeacion g "
-                . "LEFT JOIN municipio m ON g.mun_id=m.mun_id "
-                . "LEFT JOIN departamento d ON m.dep_id=d.dep_id "
-                . "LEFT JOIN departamento_region r ON d.der_id=r.der_id "
-                . "LEFT JOIN instrumentos i ON g.ins_id=i.idInstrumento "
-                . "LEFT JOIN usuario u ON g.usu_id=u.usu_id "
-                . "LEFT JOIN encuesta_estado es ON es.ees_id=g.ees_id "
-                . "LEFT JOIN opcion o ON i.idEncabezado=o.opc_id "
-                . "LEFT JOIN encuesta_tipo et ON et.enc_tipo_id=i.idTipoEncuesta "
-                . "WHERE isnull(g.ben_id) AND $criterio";
-//        echo $sql;
-        $r = $this->db->ejecutarConsulta($sql);
-        if ($r) {
-            while ($w = mysql_fetch_array($r)) {
-                $sql2 = "SELECT count(*) FROM generador_encuesta WHERE pla_id = '" . $w['pla_id'] . "' and ees_id = 1 group by ees_id";
-                $r2 = $this->db->ejecutarConsulta($sql2);
-//                echo $sql2;
-                $w2 = mysql_fetch_array($r2);
-                $planeacion[$cont]['id_element'] = $w['pla_id'];
-                $planeacion[$cont]['der_nombre'] = $w['der_nombre'];
-                $planeacion[$cont]['dep_nombre'] = $w['dep_nombre'];
-                $planeacion[$cont]['mun_nombre'] = $w['mun_nombre'];
-                $planeacion[$cont]['centro_poblado'] = null;
-                $planeacion[$cont]['beneficiario'] = null;
-                if ($admin) {
-                    $planeacion[$cont]['nivel'] = $w['opc_nombre'];
-                    $planeacion[$cont]['tipo'] = $w['enc_tipo_nombre'];
-                }
-                $planeacion[$cont]['instrumento'] = $w['instrumento'];
-                $planeacion[$cont]['pla_numero_encuestas'] = $w['pla_numero_encuestas'];
-                $planeacion[$cont]['pla_fecha_inicio'] = $w['pla_fecha_inicio'];
-                $planeacion[$cont]['pla_fecha_fin'] = $w['pla_fecha_fin'];
-                $planeacion[$cont]['usu_nombre'] = $w['usuario'];
-                $planeacion[$cont]['ees_nombre'] = $w['ees_nombre'];
-                $total = round(($w2['count(*)'] * 100) / $w['pla_numero_encuestas'], 0);
-                //calcular estado
-                $dias = $w['dias'];
-                if ($dias >= 0) {
-                    $estado = '2';
-                } else if ($dias < 0) {
-                    $estado = '3';
-                }
-                if ($excel == false) {
-                    if ($total <= 51) {
-                        $total = '<img src=./templates/img/ico/rojo.gif>' . $total . '%';
-                    } elseif ($total > 51 && $total <= 99) {
-                        $total = '<img src=./templates/img/ico/amarillo.gif>' . $total . '%';
-                    } else {
-                        $total = '<img src=./templates/img/ico/verde.gif>' . $total . '%';
-                        $estado = '1';
-                    }
-                } else {
-                    if ($total <= 51) {
-                        $total = $total . '%';
-                    } elseif ($total > 51 && $total <= 99) {
-                        $total = $total . '%';
-                    } else {
-                        $total = $total . '%';
-                        $estado = '1';
-                    }
-                }
-                $planeacion[$cont]['porcentaje_ejecucion'] = $total;
-                $cont++;
-                //mantener actualizado el estado
-                $this->db->actualizarRegistro('planeacion', array('ees_id'), $estado, (" pla_id = " . $w['pla_id']));
-            }
-        }
-
         return $planeacion;
     }
 
     function getEncuestas($criterio, $excel) {
         $encuesta = null;
-        $sql = "SELECT enc.enc_id, enc.enc_consecutivo,pla.pla_id, enc.enc_documento_soporte ,   
-            enc.enc_fecha, ecc.ecc_nombre, 'enc.enc_motivo_cuestionario_incorrecto', erf.erf_nombre,evi.evi_nombre,eri.eri_nombre," .
-                //"enc.enc_motivo_encuesta_incorrecta, ".
-                "CONCAT( usu.usu_nombre,'  ',usu.usu_apellido)AS usu_nombre,ess.ees_nombre,
-            pla.pla_fecha_fin,pla.pla_fecha_inicio FROM generador_encuesta enc 
-            left join generador_planeacion pla on pla.pla_id = enc.pla_id 
-            left join encuesta_estado ess on ess.ees_id = enc.ees_id 
-            left join encuesta_cuestionario_completo ecc on ecc.ecc_id = enc.ecc_id
-            left join encuesta_resultado_final erf on erf.erf_id = enc.erf_id
-            left join encuesta_validar_inspeccion evi on evi.evi_id = enc.evi_id
-            left join encuesta_resultado_inspeccion eri on eri.eri_id = enc.eri_id
-            left join usuario usu on usu.usu_id = enc.usu_id
-            WHERE " . $criterio;
-//        echo $sql;
+        $sql = "SELECT enc.enc_id, enc.enc_consecutivo,pla.pla_id, enc.enc_documento_soporte , "
+                . "enc.enc_fecha, ecc.ecc_nombre, enc.enc_motivo_cuestionario_incorrecto, "
+                . "erf.erf_nombre, evi.evi_nombre,eri.eri_nombre, "
+                . "CONCAT( usu.usu_nombre,' ',usu.usu_apellido) AS usu_nombre, enc.ees_id, "
+                . "pla.pla_fecha_fin, pla.pla_fecha_inicio, "
+                . "(SELECT count(p.idPregunta) FROM pregunta p "
+                . "INNER JOIN seccion s ON s.idSeccion = p.idSeccion "
+                . "INNER JOIN instrumentos i ON i.idInstrumento = s.idInstrumento "
+                . "WHERE i.idInstrumento = pla.ins_id AND p.requerido) as preguntas, "
+                . "(SELECT COUNT(*) FROM respuestas WHERE idEncuesta = enc.enc_id) as respuestas "
+                . "FROM generador_encuesta enc "
+                . "left join generador_planeacion pla on pla.pla_id = enc.pla_id "
+                . "left join encuesta_cuestionario_completo ecc on ecc.ecc_id = enc.ecc_id "
+                . "left join encuesta_resultado_final erf on erf.erf_id = enc.erf_id "
+                . "left join encuesta_validar_inspeccion evi on evi.evi_id = enc.evi_id "
+                . "left join encuesta_resultado_inspeccion eri on eri.eri_id = enc.eri_id "
+                . "left join usuario usu on usu.usu_id = enc.usu_id "
+                . "WHERE $criterio";
+        //echo $sql;
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             $cont = 0;
@@ -297,19 +204,19 @@ class CGeneradorEjecucionData {
                 $encuesta[$cont]['documento_soporte'] = "<a href='././soportes/EJECUCION/" . $w['enc_consecutivo'] . "/" . $w['enc_documento_soporte'] . "' target='_blank'>{$w['enc_documento_soporte']}</a>";
                 $encuesta[$cont]['fecha'] = $w['enc_fecha'];
                 $encuesta[$cont]['ecc'] = $w['ecc_nombre'];
-                //$encuesta[$cont]['motivo_ci'] = $w['enc_motivo_cuestionario_incorrecto'];
                 $encuesta[$cont]['erf'] = $w['erf_nombre'];
                 $encuesta[$cont]['evi'] = $w['evi_nombre'];
                 $encuesta[$cont]['eri'] = $w['eri_nombre'];
                 $encuesta[$cont]['motivo_ei'] = $w['enc_motivo_encuesta_incorrecta'];
-                //$encuesta[$cont]['responsable'] = $w['usu_nombre'];
-                if (!$excel) {
-                    $encuesta[$cont]['estado'] = $this->semaforo_seguimiento($w['pla_fecha_fin'], $w['ees_nombre']);
-                } else {
-                    if ($w['ees_nombre'] == 'Completo') {
-                        $encuesta[$cont]['estado'] = 'Completo';
+                $encuesta[$cont]['estado'] = '<img src=./templates/img/ico/verde.gif> Completado';
+                if ($w['ees_id'] != 1) {
+                    $ejecutado = ($w['respuestas']/$w['preguntas']) * 100;
+                    $ejecutado = round($ejecutado, 2);
+                    if($ejecutado >= 100){
+                        //$this->completarEncuesta($w['enc_id']);
+                        $encuesta[$cont]['estado'] = '<img src=./templates/img/ico/verde.gif> Completado';
                     } else {
-                        $encuesta[$cont]['estado'] = $this->dias_transcurridos_entre_fechas(date('Y-m-d'), $w['pla_fecha_fin']) . ' días.';
+                        $encuesta[$cont]['estado'] = "<img src=./templates/img/ico/rojo.gif> $ejecutado% Ejecutado";
                     }
                 }
                 $cont++;
@@ -324,7 +231,6 @@ class CGeneradorEjecucionData {
      * @param Date $fecha_f fecha final
      * @return Integer 
      */
-
     function getInstrumento($id) {
         $sql = "SELECT p.ins_id FROM generador_planeacion p "
                 . "INNER JOIN generador_encuesta e ON e.pla_id=p.pla_id WHERE e.enc_id = $id";
@@ -506,13 +412,51 @@ class CGeneradorEjecucionData {
         return $r;
     }
 
-    function insertEjecucionSync($enc_id, $enc_consecutivo, $pla_id, $usu_id){
+    function insertEjecucionSync($enc_id, $enc_consecutivo, $pla_id, $usu_id) {
         $tabla = 'generador_ejecucion';
         $campos = 'enc_id, enc_consecutivo, pla_id, usu_id';
-        $valores = $enc_id.",".$enc_consecutivo."," . $pla_id ."";
+        $valores = $enc_id . "," . $enc_consecutivo . "," . $pla_id . "";
         $r = $this->db->insertarRegistro($tabla, $campos, $valores);
-        
+
         return $r;
-}
+    }
     
+    public function getResumenPlaneacion($criterio = "1") {
+        $resumen = NULL;
+        $sql = "SELECT i.idInstrumento,"
+                . "CONCAT(i.codigo,' ',i.nombre) as instrumento, "
+                . "(SELECT SUM(p.pla_numero_encuestas) "
+                 . "FROM generador_planeacion p "
+                 . "WHERE p.ins_id = i.idInstrumento) as encuestas, "
+                . "(SELECT COUNT(e.enc_id) "
+                 . "FROM generador_encuesta e "
+                 . "INNER JOIN generador_planeacion p ON p.pla_id = e.pla_id "
+                . "WHERE p.ins_id = i.idInstrumento AND e.ees_id) as ejecutado "
+                . "FROM instrumentos i "
+                . "WHERE (SELECT SUM(p.pla_numero_encuestas) "
+                       . "FROM generador_planeacion p "
+                       . "WHERE p.ins_id = i.idInstrumento) IS NOT NULL AND "
+                . "$criterio";
+        $r = $this->db->ejecutarConsulta($sql);
+        if ($r) {
+            $cont = 0;
+            while ($w = mysql_fetch_array($r)) {
+                $resumen[$cont]['id'] = $w['idInstrumento'];
+                $resumen[$cont]['instrumento'] = $w['instrumento'];
+                $resumen[$cont]['encuestas'] = $w['encuestas'];
+                $resumen[$cont]['ejecutado'] = $w['ejecutado'];
+                $porcentaje = $w['ejecutado']/$w['encuestas']*100;
+                $porcentaje = round($porcentaje, 2);
+                $resumen[$cont]['porcentaje'] = "<img src=./templates/img/ico/verde.gif> 100%";
+                if(50 < $porcentaje  && $porcentaje <= 99.99){
+                    $resumen[$cont]['porcentaje'] = "<img src=./templates/img/ico/amarillo.gif> $porcentaje%";
+                } else if ($porcentaje <= 50) {
+                    $resumen[$cont]['porcentaje'] = "<img src=./templates/img/ico/rojo.gif> $porcentaje%";
+                }
+                $cont++;
+            }
+        }
+        return $resumen;
+    }
+
 }

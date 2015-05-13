@@ -3,7 +3,7 @@ function validar_agregar_proveedor(){
     
         if(document.getElementById('txt_nit_proveedor').value=='' || 
                 !validarEntero(document.getElementById('txt_nit_proveedor').value) || 
-                document.getElementById('txt_nit_proveedor').value.length>15){
+                document.getElementById('txt_nit_proveedor').value.length>9){
 		mostrarDiv('error_nit');	
 		return false;
 	}

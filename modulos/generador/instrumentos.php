@@ -19,8 +19,8 @@ switch ($task) {
         $form->setTitle(TITULO_INSTRUMENTOS);
         $form->writeForm();
         $dt = new CHtmlDataTable();
-        $titulos = array(CODIGO_INSTRUMENTO, NOMBRE_INSTRUMENTO,
-            SECCIONES_INSTRUMENTO, PREGUNTAS_INSTRUMENTO);
+        $titulos = array(CODIGO_INSTRUMENTO, NOMBRE_INSTRUMENTO, ENCABEZADO_INTRUMENTO,
+            TIPO_INSTRUMENTO, SECCIONES_INSTRUMENTO, PREGUNTAS_INSTRUMENTO);
         $instrumentos = $daoInstrumentos->getInstrumentos();
         $dt->setTitleRow($titulos);
         $dt->setTitleTable(TITULO_INSTRUMENTOS);
@@ -62,7 +62,7 @@ switch ($task) {
                         <li>
                         <?php } ?>
                         <a href="?mod=instrumentos&task=see&seccionActual=<?= ($j * PAGINAS) ?>&id_element=<?= $idInstrumento ?>&niv=<?= $niv ?>&pagina=<?= ($j) ?>"><?= ($j + 1) ?></a>
-                        </li>
+                    </li>
                 <?php } ?>
                 <li>
                     <a href="?mod=instrumentos&task=see&seccionActual=<?= ($numeroSecciones - 1) ?>&id_element=<?= $idInstrumento ?>&niv=<?= $niv ?>&pagina=<?= ($numeroPaginas - 1) ?>" aria-label="Next">
@@ -74,8 +74,8 @@ switch ($task) {
         <ul class="nav nav-tabs nav-justified">
             <?php
             $maximo = PAGINAS;
-            if($maximo*$numeroPaginas > $numeroSecciones && $pagina == ($numeroPaginas-1)){
-                $maximo = PAGINAS - ($numeroPaginas*PAGINAS - $numeroSecciones);
+            if ($maximo * $numeroPaginas > $numeroSecciones && $pagina == ($numeroPaginas - 1)) {
+                $maximo = PAGINAS - ($numeroPaginas * PAGINAS - $numeroSecciones);
             }
             for ($i = 0; $i < $maximo; $i++) {
                 $numeroSeccion = (PAGINAS * $pagina) + $i;
@@ -546,7 +546,7 @@ switch ($task) {
     case 'edit':
         $idInstrumento = $_REQUEST['id_element'];
         $instrumento = $daoInstrumentos->getInstrumentoById($idInstrumento);
-        $secciones = $daoInstrumentos->getSecciones($instrumento);
+		$secciones = $daoInstrumentos->getSecciones($instrumento);
         $numeroSecciones = count($secciones);
         $seccionActual = 0;
         if (isset($_REQUEST['seccionActual'])) {
@@ -585,6 +585,50 @@ switch ($task) {
                                 </span>
                                 <input name="codigoInstrumento" id="codigoInstrumento" type='text' class="form-control" value='<?php echo $instrumento->getCodigo(); ?>'>
                             </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-addon">
+                                    Encabezado:
+                                </span>
+                                <select class="form-control" name="encabezadoInstrumento" id="encabezadoInstrumento">
+                                <?php
+                                $tiposIns = $planData->getEncabezados();
+                                if (isset($tiposIns)) {
+                                    foreach ($tiposIns as $t) {
+                                        if($t['id'] == $instrumento->getNivel()){
+                                            echo "<option value=" . $t['id'] . " selected>" . $t['nombre'] . "</option>";
+                                        } else {
+                                            echo "<option value=" . $t['id'] . ">" . $t['nombre'] . "</option>";
+                                        }
+                                        
+                                    }
+                                }
+                                ?>
+                                </select>
+                            </div>                      
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-addon">
+                                    Tipo:
+                                </span>
+                                <select class="form-control" name="tipoInstrumento" id="tipoInstrumento">
+                                <?php
+                                $tiposIns = $planData->getTipoInstrumentos('enc_tipo_id');
+                                if (isset($tiposIns)) {
+                                    foreach ($tiposIns as $t) {
+                                        if($t['id'] == $instrumento->getTipo()){
+                                            echo "<option value=" . $t['id'] . " selected>" . $t['nombre'] . "</option>";
+                                        } else {
+                                            echo "<option value=" . $t['id'] . ">" . $t['nombre'] . "</option>";
+                                        }
+                                        
+                                    }
+                                }
+                                ?>
+                                </select>
+                            </div>                      
                         </div>
                         <div class="col-lg-2">
                             <button type='submit' class="form-control" value='Guardar'>Guardar</button>
@@ -959,7 +1003,8 @@ switch ($task) {
         $idInstrumento = $_REQUEST['idInstrumento'];
         $nombreInstrumento = $_REQUEST['nombreInstrumento'];
         $codigoInstrumento = $_REQUEST['codigoInstrumento'];
-        $instrumento = new CInstrumento($idInstrumento, $nombreInstrumento, $codigoInstrumento);
+        $encabezadoInstrumento = $_REQUEST['encabezadoInstrumento'];
+        $instrumento = new CInstrumento($idInstrumento, $nombreInstrumento, $codigoInstrumento, 1 , $encabezadoInstrumento);
         $r = $daoInstrumentos->updateInstrumento($instrumento);
         $mens = ERROR_ACTUALIZAR_INSTRUMENTO;
         if ($r == TRUE) {

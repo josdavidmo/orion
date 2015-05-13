@@ -65,17 +65,6 @@ switch ($task) {
         }
         $form->addSelect('select', 'txt_departamento', 'txt_departamento', $opciones, PLANEACION_DEPARTAMENTO, $departamento, '', 'onChange=submit();');
 
-        //Municipios
-//        $form->addEtiqueta(PLANEACION_MUNICIPIO);
-//        $opciones = null;
-//        $municipios = $planData->getMunicipio($departamento, ' mun_nombre');
-//        if (isset($municipios)) {
-//            foreach ($municipios as $t) {
-//                $opciones[count($opciones)] = array('value' => $t['id'], 'texto' => $t['nombre']);
-//            }
-//        }
-//        $form->addSelect('select', 'txt_municipio', 'txt_municipio', $opciones, PLANEACION_MUNICIPIO, $municipio, '', 'onChange=submit();');
-
         //Botones Formulario
         $form->addInputText('hidden', 'txt_criterio', 'txt_criterio', '5', '5', '', '', '');
 
@@ -84,16 +73,14 @@ switch ($task) {
         $planeaciones = $planData->getMunicipios($criterio);
         //Inicio Tabla
         $dt = new CHtmlDataTable();
-        $titulos = array(
-            //NOMBRE_CENTRO_POBLADO, 
-            PLANEACION_MUNICIPIO, PLANEACION_DEPARTAMENTO, PLANEACION_REGION );
+        $titulos = array(PLANEACION_MUNICIPIO, PLANEACION_DEPARTAMENTO, PLANEACION_REGION );
         $dt->setDataRows($planeaciones);
         $dt->setTitleRow($titulos);
         $dt->setTitleTable(TABLA_PLANEACION);
 
         //OPCIONES DE GESTIÓN
         $dt->setSeeLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=centros");
-        $dt->setEditLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=planeacionMunicipio");
+        //$dt->setEditLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=planeacionMunicipio");
         $dt->setType(1);
         $pag_crit = "";
         $dt->setPag(1, $pag_crit);
@@ -120,16 +107,14 @@ switch ($task) {
 
         //Botones Formulario
         $form->addInputText('hidden', 'txt_criterio', 'txt_criterio', '5', '5', '', '', '');
-        $form->addInputButton('button', 'atras', 'atras', BTN_ATRAS, '', 
-                'onclick=location.href="?mod=' . $modulo . '&niv=' . $niv . '&task=list"');
+        $form->addInputButton('button', 'atras', 'atras', BTN_ATRAS, '','onclick=location.href="?mod=' . $modulo . '&niv=' . $niv . '&task=list"');
+        $form->setOptions('autoClean', false);
         $form->writeForm();
         //Carga filtro de planeaciones
         $planeaciones = $planData->getCentroPoblado($criterio);
         //Inicio Tabla
         $dt = new CHtmlDataTable();
-        $titulos = array(NOMBRE_CENTRO_POBLADO, PLANEACION_MUNICIPIO
-            //, PLANEACION_DEPARTAMENTO, PLANEACION_REGION 
-            );
+        $titulos = array(NOMBRE_CENTRO_POBLADO, PLANEACION_MUNICIPIO);
         $dt->setDataRows($planeaciones);
         $dt->setTitleRow($titulos);
         $dt->setTitleTable(TABLA_PLANEACION);
@@ -144,12 +129,16 @@ switch ($task) {
     
     case 'beneficiarios':
         $id = $_REQUEST['id_element'];
+        
         $form = new CHtmlForm();
         $form->setTitle(TITULO_BENEFICIARIOS);
         $form->setId('frm_list_beneficiario');
         $form->setMethod('post');
+        $form->setOptions('autoClean', false);
         $form->setClassEtiquetas('td_label');
         $form->addInputText('hidden', 'txt_centro_poblado', 'txt_centro_poblado', 0, 0, $id, '', '');
+        $form->addInputButton('button', 'cancelar', 'cancelar', BTN_ATRAS, 'button',
+                'onClick=location.href="?mod=' . $modulo . '&niv=' . $niv . '&task=list"');
         $form->writeForm();
         $criterio = " idCentroPoblado = $id";
         $planeaciones = $planData->getBeneficiarios($criterio);
@@ -167,21 +156,13 @@ switch ($task) {
         $dt->setPag(1, $pag_crit);
         $dt->writeDataTable($niv);
         
-        $form = new CHtmlForm();
-        $form->setId('frm_list_beneficiario');
-        $form->setMethod('post');
-        $form->setClassEtiquetas('td_label');
-        $form->setOptions('autoClean', false);
-        $form->addInputButton('button', 'cancelar', 'cancelar', BTN_ATRAS, 'button',
-                'onClick=location.href="?mod=' . $modulo . '&niv=' . $niv . '&task=list"');
-        $form->writeForm();
-        
         break;
     
     case 'planeacion':
         $beneficiario   = $_REQUEST['id_element'];
         $centro_poblado =$_REQUEST['CP'];
         $form = new CHtmlForm();
+        $form->setOptions('autoClean', false);
         $form->addInputText('hidden', 'txt_centro_poblado', 'txt_centro_poblado', 0, 0, $centro_poblado, '', '');
         $form->addInputText('hidden', 'txt_beneficiario', 'txt_beneficiario', 0, 0, $beneficiario, '', '');
         $form->setTitle(PLANEACION." para ".$planData->getNombreBeneficiario($beneficiario));
@@ -189,6 +170,8 @@ switch ($task) {
         $form->setMethod('post');
         $form->setClassEtiquetas('td_label');
         $criterio = "ben_id = $beneficiario";
+        $form->addInputButton('button', 'cancelar', 'cancelar', BTN_ATRAS, 'button',
+                'onClick=location.href="?mod=' . $modulo . '&niv=' . $niv . '&task=beneficiarios&id_element='.$centro_poblado.'"');
         $form->writeForm();
         $planeaciones = $planData->getPlaneacion($criterio);
         $dt = new CHtmlDataTable();
@@ -198,24 +181,13 @@ switch ($task) {
         $dt->setTitleRow($titulos);
         $dt->setTitleTable(TABLA_PLANEACION);
 
-        //OPCIONES DE GESTIÓN
-        
-        //$dt->setEditLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=editPlaneacion&ben=$beneficiario&CP=$centro_poblado");
+        $dt->setEditLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=editPlaneacion&ben=$beneficiario&CP=$centro_poblado");
         $dt->setDeleteLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=deletePlaneacion&ben=$beneficiario&CP=$centro_poblado");
         $dt->setAddLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=addPlaneacion&ben=$beneficiario&CP=$centro_poblado");
         $dt->setType(1);
         $pag_crit = "";
         $dt->setPag(1, $pag_crit);
         $dt->writeDataTable(1);
-        
-        $form = new CHtmlForm();
-        $form->setId('frm_list_planeacion');
-        $form->setMethod('post');
-        $form->setClassEtiquetas('td_label');
-        $form->setOptions('autoClean', false);
-        $form->addInputButton('button', 'cancelar', 'cancelar', BTN_ATRAS, 'button',
-                'onClick=location.href="?mod=' . $modulo . '&niv=' . $niv . '&task=beneficiarios&id_element='.$centro_poblado.'"');
-        $form->writeForm();
         break;
     
     case 'planeacionMunicipio':
@@ -227,6 +199,8 @@ switch ($task) {
         $form->setMethod('post');
         $form->setClassEtiquetas('td_label');
         $criterio = " mun_id = $municipio";
+        $form->addInputButton('button', 'cancelar', 'cancelar', BTN_ATRAS, 'button',
+                'onClick=location.href="?mod=' . $modulo . '&niv=' . $niv . '&task=list"');
         $form->writeForm();
         $planeaciones = $planData->getPlaneacion($criterio);
         $dt = new CHtmlDataTable();
@@ -238,7 +212,7 @@ switch ($task) {
 
         //OPCIONES DE GESTIÓN
         
-        //$dt->setEditLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=editPlaneacionMunicipio&mun=$municipio");
+        $dt->setEditLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=editPlaneacionMunicipio&mun=$municipio");
         $dt->setDeleteLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=deletePlaneacionMunicipio&mun=$municipio");
         $dt->setAddLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=addPlaneacionMunicipio&mun=$municipio");
         $dt->setType(1);
@@ -246,14 +220,6 @@ switch ($task) {
         $dt->setPag(1, $pag_crit);
         $dt->writeDataTable($niv);
         
-        $form = new CHtmlForm();
-        $form->setId('frm_list_planeacion');
-        $form->setMethod('post');
-        $form->setClassEtiquetas('td_label');
-        $form->setOptions('autoClean', false);
-        $form->addInputButton('button', 'cancelar', 'cancelar', BTN_ATRAS, 'button',
-                'onClick=location.href="?mod=' . $modulo . '&niv=' . $niv . '&task=list"');
-        $form->writeForm();
         break;
     
     case 'addPlaneacion':
@@ -400,6 +366,9 @@ switch ($task) {
         break;
         
     case 'editPlaneacion':
+        $id_element = $_REQUEST['id_element'];
+        $planeacion = $planData->getPlaneacionById($id_element);
+        
         $beneficiario   = $_REQUEST['ben'];
         $centro_poblado =$_REQUEST['CP'];
         $form = new CHtmlForm();
@@ -429,22 +398,22 @@ switch ($task) {
         $form->addInputText('hidden', 'CP', 'CP', '', '', $centro_poblado, '', '');
         
         $form->addEtiqueta(INSTRUMENTO);
-        $form->addSelect('select', 'sel_ins', 'sel_ins', $instrumentos, '', '', '', ' required');
+        $form->addSelect('select', 'sel_ins', 'sel_ins', $instrumentos, '', $planeacion['ins_id'], '', ' required');
         
         $form->addEtiqueta(PLANEACION_FECHA_INICIO);
-        $form->addInputDate('date', 'txt_inicio', 'txt_inicio', '', '%Y-%m-%d', '18', '18', '', 'pattern="' . 
+        $form->addInputDate('date', 'txt_inicio', 'txt_inicio', $planeacion['pla_fecha_inicio'], '%Y-%m-%d', '18', '18', '', 'pattern="' . 
                 PATTERN_FECHA. '" title="' . $html->traducirTildes(TITLE_FECHA) . '" required');
 
         $form->addEtiqueta(PLANEACION_FECHA_FIN);
-        $form->addInputDate('date', 'txt_fin', 'txt_fin', '', '%Y-%m-%d', '18', '18', '', 'pattern="' . 
+        $form->addInputDate('date', 'txt_fin', 'txt_fin', $planeacion['pla_fecha_fin'], '%Y-%m-%d', '18', '18', '', 'pattern="' . 
                 PATTERN_FECHA . '" title="' . $html->traducirTildes(TITLE_FECHA) . '" required');
         
         $form->addEtiqueta(PLANEACION_NUMERO_ENCUESTAS);
-        $form->addInputText('text', 'txt_numero', 'txt_numero', 25, 25, '','',' pattern="' 
+        $form->addInputText('text', 'txt_numero', 'txt_numero', 25, 25, $planeacion['pla_numero_encuestas'],'',' pattern="' 
                 . PATTERN_NUMEROS . '" title="' . $html->traducirTildes(TITLE_NUMEROS) . '" required');
         
         $form->addEtiqueta(USUARIO_LOGIN);
-        $form->addSelect('select', 'sel_usu', 'sel_usu', $usuarios, '', '', '', ' required');
+        $form->addSelect('select', 'sel_usu', 'sel_usu', $usuarios, '', $planeacion['usu_id'], '', ' required');
 
         $form->addInputButton('submit', 'ok', 'ok', BOTON_INSERTAR, 'button', '');
         $form->addInputButton('button', 'cancelar', 'cancelar', BOTON_CANCELAR, 'button',
@@ -517,7 +486,6 @@ switch ($task) {
         $pla_id = $_REQUEST['id_element'];
         $beneficiario   = $_REQUEST['ben'];
         $centro_poblado =$_REQUEST['CP'];
-        $planData->deleteEncuestas($pla_id);
         $r = $planData->deletePlaneacion($pla_id);
         if($r=='true'){
             $mens = PLANEACION_BORRADO;

@@ -32,12 +32,13 @@ class COrdenesdepago {
     var $permitidos = array('pdf', 'doc', 'xls', 'ppt', 'docx',
         'xlsx', 'gif', 'jpg', 'png', 'tif', 'zip', 'rar');
     var $contrato = null;
+    var $amortizacion = null;
 
     //definimos los atributos de la clase y creamos el constructor de la misma
 
     function COrdenesdepago($id, $tipoactividad, $actividad, $numerodeorden,
             $fecha, $numerofactura, $proveedor, $moneda, $tasa, $valortotal, $estado, 
-            $fechapago, $observaciones, $cuenta_cobro, $archivo, $database, $contrato = NULL) {
+            $fechapago, $observaciones, $cuenta_cobro, $archivo, $database, $contrato = NULL, $amortizacion = NULL) {
 
         $this->Id_ordenedepago = $id;
         $this->tipodeactividad_ordenedepago = $tipoactividad;
@@ -56,6 +57,7 @@ class COrdenesdepago {
         $this->archivo = $archivo;
         $this->database = $database;
         $this->contrato = $contrato;
+        $this->amortizacion = $amortizacion;
     }
 
     public function getId_ordenedepago() {
@@ -125,8 +127,16 @@ class COrdenesdepago {
     function setContrato($contrato) {
         $this->contrato = $contrato;
     }
+    
+    function getAmortizacion() {
+        return $this->amortizacion;
+    }
 
-    /**
+    function setAmortizacion($amortizacion) {
+        $this->amortizacion = $amortizacion;
+    }
+
+        /**
      * cargarordendepago, permite cargar el objeto orden de pago para modificarlo y eliminarlo 
      */
     function cargarordendepago() {
@@ -148,6 +158,7 @@ class COrdenesdepago {
             $this->observaciones = $r['Observaciones_Orden'];
             $this->archivo = $r['Archivo_Orden'];
             $this->contrato = $r['contrato_idContrato'];
+            $this->amortizacion = $r['amortizacion'];
         } else {
             $this->Id_ordenedepago = '';
             $this->tipodeactividad_ordenedepago = '';
@@ -165,6 +176,7 @@ class COrdenesdepago {
             $this->cuenta_cobro = '';
             $this->archivo = '';
             $this->contrato = '';
+            $this->amortizacion = '';
         }
     }
 
@@ -228,7 +240,7 @@ class COrdenesdepago {
             } else {
                 $temp = 'null';
             }
-            $sindocumento = $this->database->insertarOrdendePago($this->Id_ordenedepago, $this->tipodeactividad_ordenedepago, $this->actividad_ordenedepago, $this->numero_ordenedepago, $this->fecha_ordenedepago, $this->numerofactura_ordenedepago, $this->proveedor_ordenedepago, $this->moneda_ordenedepago, $this->tasa_ordenedepago, $this->valortotal_ordenedepago, $this->estado_ordenedepago, $this->fechapago_ordenedepago, $this->observaciones, $temp, $this->archivo['name'], $this->contrato);
+            $sindocumento = $this->database->insertarOrdendePago($this->Id_ordenedepago, $this->tipodeactividad_ordenedepago, $this->actividad_ordenedepago, $this->numero_ordenedepago, $this->fecha_ordenedepago, $this->numerofactura_ordenedepago, $this->proveedor_ordenedepago, $this->moneda_ordenedepago, $this->tasa_ordenedepago, $this->valortotal_ordenedepago, $this->estado_ordenedepago, $this->fechapago_ordenedepago, $this->observaciones, $temp, $this->archivo['name'], $this->contrato, $this->amortizacion);
             if ($sindocumento == "true") {
                 $r = ORDEN_DE_PAGO_AGREGADA_EXITO;
             } else {
@@ -245,7 +257,7 @@ class COrdenesdepago {
             } else {
                 $temp = 'null';
             }
-            $sindocumento = $this->database->insertarOrdendePago($this->Id_ordenedepago, $this->tipodeactividad_ordenedepago, $this->actividad_ordenedepago, $this->numero_ordenedepago, $this->fecha_ordenedepago, $this->numerofactura_ordenedepago, $this->proveedor_ordenedepago, $this->moneda_ordenedepago, $this->tasa_ordenedepago, $this->valortotal_ordenedepago, $this->estado_ordenedepago, $this->fechapago_ordenedepago, $this->observaciones, $temp, $this->archivo['name'], $this->contrato);
+            $sindocumento = $this->database->insertarOrdendePago($this->Id_ordenedepago, $this->tipodeactividad_ordenedepago, $this->actividad_ordenedepago, $this->numero_ordenedepago, $this->fecha_ordenedepago, $this->numerofactura_ordenedepago, $this->proveedor_ordenedepago, $this->moneda_ordenedepago, $this->tasa_ordenedepago, $this->valortotal_ordenedepago, $this->estado_ordenedepago, $this->fechapago_ordenedepago, $this->observaciones, $temp, $this->archivo['name'], $this->contrato, $this->amortizacion);
             if ($sindocumento == "true") {
                 $r = ORDEN_DE_PAGO_AGREGADA_EXITO_DOCUMENTO;
             } else {
@@ -319,7 +331,7 @@ class COrdenesdepago {
             } else {
                 $temp = 'null';
             }
-            $sindocumento = $this->database->ActualizarOrdendePago($this->Id_ordenedepago, $this->tipodeactividad_ordenedepago, $this->actividad_ordenedepago, $this->numero_ordenedepago, $this->fecha_ordenedepago, $this->numerofactura_ordenedepago, $this->proveedor_ordenedepago, $this->moneda_ordenedepago, $this->tasa_ordenedepago, $this->valortotal_ordenedepago, $this->estado_ordenedepago, $this->fechapago_ordenedepago, $this->observaciones, $temp, $this->contrato, $this->archivo['name']);
+            $sindocumento = $this->database->ActualizarOrdendePago($this->Id_ordenedepago, $this->tipodeactividad_ordenedepago, $this->actividad_ordenedepago, $this->numero_ordenedepago, $this->fecha_ordenedepago, $this->numerofactura_ordenedepago, $this->proveedor_ordenedepago, $this->moneda_ordenedepago, $this->tasa_ordenedepago, $this->valortotal_ordenedepago, $this->estado_ordenedepago, $this->fechapago_ordenedepago, $this->observaciones, $temp, $this->contrato, $this->archivo['name'], $this->amortizacion);
             if ($sindocumento == 1) {
                 $r = ORDEN_DE_PAGO_EDITADA_EXITO;
             } else {
@@ -336,7 +348,7 @@ class COrdenesdepago {
             } else {
                 $temp = 'null';
             }
-            $sindocumento = $this->database->ActualizarOrdendePago($this->Id_ordenedepago, $this->tipodeactividad_ordenedepago, $this->actividad_ordenedepago, $this->numero_ordenedepago, $this->fecha_ordenedepago, $this->numerofactura_ordenedepago, $this->proveedor_ordenedepago, $this->moneda_ordenedepago, $this->tasa_ordenedepago, $this->valortotal_ordenedepago, $this->estado_ordenedepago, $this->fechapago_ordenedepago, $this->observaciones, $temp, $this->contrato, $archivo_anterior);
+            $sindocumento = $this->database->ActualizarOrdendePago($this->Id_ordenedepago, $this->tipodeactividad_ordenedepago, $this->actividad_ordenedepago, $this->numero_ordenedepago, $this->fecha_ordenedepago, $this->numerofactura_ordenedepago, $this->proveedor_ordenedepago, $this->moneda_ordenedepago, $this->tasa_ordenedepago, $this->valortotal_ordenedepago, $this->estado_ordenedepago, $this->fechapago_ordenedepago, $this->observaciones, $temp, $this->contrato, $archivo_anterior, $this->amortizacion);
             if ($sindocumento == 1) {
                 $r = ORDEN_DE_PAGO_EDITADA_EXITO_SIN_DOCUMENTO;
             } else {

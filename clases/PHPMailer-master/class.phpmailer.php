@@ -537,13 +537,6 @@ class PHPMailer
     protected $sign_key_file = '';
 
     /**
-     * The optional S/MIME extra certificates ("CA Chain") file path.
-     * @type string
-     * @access protected
-     */
-    protected $sign_extracerts_file = '';
-
-    /**
      * The S/MIME password for the key.
      * Used only if the key is encrypted.
      * @type string
@@ -1041,6 +1034,7 @@ class PHPMailer
                     str_replace("\r\n", "\n", $header_dkim) . self::CRLF;
             }
             return true;
+
         } catch (phpmailerException $exc) {
             $this->setError($exc->getMessage());
             if ($this->exceptions) {
@@ -1220,6 +1214,7 @@ class PHPMailer
     protected function smtpSend($header, $body)
     {
         $bad_rcpt = array();
+
         if (!$this->smtpConnect()) {
             throw new phpmailerException($this->lang('smtp_connect_failed'), self::STOP_CRITICAL);
         }
@@ -1234,17 +1229,32 @@ class PHPMailer
         }
 
         // Attempt to send to all recipients
-        foreach (array($this->to, $this->cc, $this->bcc) as $togroup) {
-            foreach ($togroup as $to) {
-                if (!$this->smtp->recipient($to[0])) {
-                    $error = $this->smtp->getError();
-                    $bad_rcpt[] = array('to' => $to[0], 'error' => $error['detail']);
-                    $isSent = false;
-                } else {
-                    $isSent = true;
-                }
-                $this->doCallback($isSent, array($to[0]), array(), array(), $this->Subject, $body, $this->From);
+        foreach ($this->to as $to) {
+            if (!$this->smtp->recipient($to[0])) {
+                $bad_rcpt[] = $to[0];
+                $isSent = false;
+            } else {
+                $isSent = true;
             }
+            $this->doCallback($isSent, array($to[0]), array(), array(), $this->Subject, $body, $this->From);
+        }
+        foreach ($this->cc as $cc) {
+            if (!$this->smtp->recipient($cc[0])) {
+                $bad_rcpt[] = $cc[0];
+                $isSent = false;
+            } else {
+                $isSent = true;
+            }
+            $this->doCallback($isSent, array(), array($cc[0]), array(), $this->Subject, $body, $this->From);
+        }
+        foreach ($this->bcc as $bcc) {
+            if (!$this->smtp->recipient($bcc[0])) {
+                $bad_rcpt[] = $bcc[0];
+                $isSent = false;
+            } else {
+                $isSent = true;
+            }
+            $this->doCallback($isSent, array(), array(), array($bcc[0]), $this->Subject, $body, $this->From);
         }
 
         // Only send the DATA command if we have viable recipients
@@ -1259,12 +1269,8 @@ class PHPMailer
         }
         //Create error message for any bad addresses
         if (count($bad_rcpt) > 0) {
-            $errstr = '';
-            foreach ($bad_rcpt as $bad) {
-                $errstr .= $bad['to'] . ': ' . $bad['error'];
-            }
             throw new phpmailerException(
-                $this->lang('recipients_failed') . $errstr,
+                $this->lang('recipients_failed') . implode(', ', $bad_rcpt),
                 self::STOP_CONTINUE
             );
         }
@@ -1310,23 +1316,13 @@ class PHPMailer
             // The host string prefix can temporarily override the current setting for SMTPSecure
             // If it's not specified, the default value is used
             $prefix = '';
-            $secure = $this->SMTPSecure;
             $tls = ($this->SMTPSecure == 'tls');
-            if ('ssl' == $hostinfo[2] or ('' == $hostinfo[2] and 'ssl' == $this->SMTPSecure)) {
+            if ($hostinfo[2] == 'ssl' or ($hostinfo[2] == '' and $this->SMTPSecure == 'ssl')) {
                 $prefix = 'ssl://';
-                $tls = false; // Can't have SSL and TLS at the same time
-                $secure = 'ssl';
+                $tls = false; // Can't have SSL and TLS at once
             } elseif ($hostinfo[2] == 'tls') {
                 $tls = true;
                 // tls doesn't use a prefix
-                $secure = 'tls';
-            }
-            //Do we need the OpenSSL extension?
-            if ('tls' === $secure or 'ssl' === $secure) {
-                //Check for an OpenSSL constant rather than using extension_loaded, which is sometimes disabled
-                if (!defined('OPENSSL_ALGO_SHA1')) {
-                    throw new phpmailerException($this->lang('extension_missing').'openssl', self::STOP_CRITICAL);
-                }
             }
             $host = $hostinfo[3];
             $port = $this->Port;
@@ -1423,8 +1419,7 @@ class PHPMailer
             'signing' => 'Signing Error: ',
             'smtp_connect_failed' => 'SMTP connect() failed.',
             'smtp_error' => 'SMTP server error: ',
-            'variable_set' => 'Cannot set or reset variable: ',
-            'extension_missing' => 'Extension missing: '
+            'variable_set' => 'Cannot set or reset variable: '
         );
         if (empty($lang_path)) {
             // Calculate an absolute path so it can work if CWD is not here
@@ -1432,14 +1427,13 @@ class PHPMailer
         }
         $foundlang = true;
         $lang_file = $lang_path . 'phpmailer.lang-' . $langcode . '.php';
-        // There is no English translation file
-        if ($langcode != 'en') {
+        if ($langcode != 'en') { // There is no English translation file
             // Make sure language file path is readable
             if (!is_readable($lang_file)) {
                 $foundlang = false;
             } else {
                 // Overwrite language-specific strings.
-                // This way we'll never have missing translation keys.
+                // This way we'll never have missing translations.
                 $foundlang = include $lang_file;
             }
         }
@@ -1735,7 +1729,7 @@ class PHPMailer
         } else {
             $this->lastMessageID = sprintf('<%s@%s>', $uniq_id, $this->ServerHostname());
         }
-        $result .= $this->headerLine('Message-ID', $this->lastMessageID);
+        $result .= $this->HeaderLine('Message-ID', $this->lastMessageID);
         $result .= $this->headerLine('X-Priority', $this->Priority);
         if ($this->XMailer == '') {
             $result .= $this->headerLine(
@@ -1833,6 +1827,7 @@ class PHPMailer
         return $this->MIMEHeader . $this->mailHeader . self::CRLF . $this->MIMEBody;
     }
 
+
     /**
      * Assemble the message body.
      * Returns an empty string on failure.
@@ -1862,25 +1857,20 @@ class PHPMailer
             $altBodyEncoding = '7bit';
             $altBodyCharSet = 'us-ascii';
         }
-        //Use this as a preamble in all multipart message types
-        $mimepre = "This is a multi-part message in MIME format." . $this->LE . $this->LE;
         switch ($this->message_type) {
             case 'inline':
-                $body .= $mimepre;
                 $body .= $this->getBoundary($this->boundary[1], $bodyCharSet, '', $bodyEncoding);
                 $body .= $this->encodeString($this->Body, $bodyEncoding);
                 $body .= $this->LE . $this->LE;
                 $body .= $this->attachAll('inline', $this->boundary[1]);
                 break;
             case 'attach':
-                $body .= $mimepre;
                 $body .= $this->getBoundary($this->boundary[1], $bodyCharSet, '', $bodyEncoding);
                 $body .= $this->encodeString($this->Body, $bodyEncoding);
                 $body .= $this->LE . $this->LE;
                 $body .= $this->attachAll('attachment', $this->boundary[1]);
                 break;
             case 'inline_attach':
-                $body .= $mimepre;
                 $body .= $this->textLine('--' . $this->boundary[1]);
                 $body .= $this->headerLine('Content-Type', 'multipart/related;');
                 $body .= $this->textLine("\tboundary=\"" . $this->boundary[2] . '"');
@@ -1893,7 +1883,6 @@ class PHPMailer
                 $body .= $this->attachAll('attachment', $this->boundary[1]);
                 break;
             case 'alt':
-                $body .= $mimepre;
                 $body .= $this->getBoundary($this->boundary[1], $altBodyCharSet, 'text/plain', $altBodyEncoding);
                 $body .= $this->encodeString($this->AltBody, $altBodyEncoding);
                 $body .= $this->LE . $this->LE;
@@ -1908,7 +1897,6 @@ class PHPMailer
                 $body .= $this->endBoundary($this->boundary[1]);
                 break;
             case 'alt_inline':
-                $body .= $mimepre;
                 $body .= $this->getBoundary($this->boundary[1], $altBodyCharSet, 'text/plain', $altBodyEncoding);
                 $body .= $this->encodeString($this->AltBody, $altBodyEncoding);
                 $body .= $this->LE . $this->LE;
@@ -1924,7 +1912,6 @@ class PHPMailer
                 $body .= $this->endBoundary($this->boundary[1]);
                 break;
             case 'alt_attach':
-                $body .= $mimepre;
                 $body .= $this->textLine('--' . $this->boundary[1]);
                 $body .= $this->headerLine('Content-Type', 'multipart/alternative;');
                 $body .= $this->textLine("\tboundary=\"" . $this->boundary[2] . '"');
@@ -1940,7 +1927,6 @@ class PHPMailer
                 $body .= $this->attachAll('attachment', $this->boundary[1]);
                 break;
             case 'alt_inline_attach':
-                $body .= $mimepre;
                 $body .= $this->textLine('--' . $this->boundary[1]);
                 $body .= $this->headerLine('Content-Type', 'multipart/alternative;');
                 $body .= $this->textLine("\tboundary=\"" . $this->boundary[2] . '"');
@@ -1972,7 +1958,7 @@ class PHPMailer
         } elseif ($this->sign_key_file) {
             try {
                 if (!defined('PKCS7_TEXT')) {
-                    throw new phpmailerException($this->lang('extension_missing') . 'openssl');
+                    throw new phpmailerException($this->lang('signing') . ' OpenSSL extension missing.');
                 }
                 // @TODO would be nice to use php://temp streams here, but need to wrap for PHP < 5.1
                 $file = tempnam(sys_get_temp_dir(), 'mail');
@@ -1980,34 +1966,17 @@ class PHPMailer
                     throw new phpmailerException($this->lang('signing') . ' Could not write temp file');
                 }
                 $signed = tempnam(sys_get_temp_dir(), 'signed');
-                //Workaround for PHP bug https://bugs.php.net/bug.php?id=69197
-                if (empty($this->sign_extracerts_file)) {
-                    $sign = @openssl_pkcs7_sign(
-                        $file,
-                        $signed,
-                        'file://' . realpath($this->sign_cert_file),
-                        array('file://' . realpath($this->sign_key_file), $this->sign_key_pass),
-                        null
-                    );
-                } else {
-                    $sign = @openssl_pkcs7_sign(
-                        $file,
-                        $signed,
-                        'file://' . realpath($this->sign_cert_file),
-                        array('file://' . realpath($this->sign_key_file), $this->sign_key_pass),
-                        null,
-                        PKCS7_DETACHED,
-                        $this->sign_extracerts_file
-                    );
-                }
-                if ($sign) {
+                if (@openssl_pkcs7_sign(
+                    $file,
+                    $signed,
+                    'file://' . realpath($this->sign_cert_file),
+                    array('file://' . realpath($this->sign_key_file), $this->sign_key_pass),
+                    null
+                )
+                ) {
                     @unlink($file);
                     $body = file_get_contents($signed);
                     @unlink($signed);
-                    //The message returned by openssl contains both headers and body, so need to split them up
-                    $parts = explode("\n\n", $body, 2);
-                    $this->MIMEHeader .= $parts[0] . $this->LE . $this->LE;
-                    $body = $parts[1];
                 } else {
                     @unlink($file);
                     @unlink($signed);
@@ -2505,8 +2474,7 @@ class PHPMailer
      */
     public function encodeQP($string, $line_max = 76)
     {
-        // Use native function if it's available (>= PHP5.3)
-        if (function_exists('quoted_printable_encode')) {
+        if (function_exists('quoted_printable_encode')) { // Use native function if it's available (>= PHP5.3)
             return $this->fixEOL(quoted_printable_encode($string));
         }
         // Fall back to a pure PHP implementation
@@ -2833,17 +2801,8 @@ class PHPMailer
         $this->error_count++;
         if ($this->Mailer == 'smtp' and !is_null($this->smtp)) {
             $lasterror = $this->smtp->getError();
-            if (!empty($lasterror['error'])) {
-                $msg .= $this->lang('smtp_error') . $lasterror['error'];
-                if (!empty($lasterror['detail'])) {
-                    $msg .= ' Detail: '. $lasterror['detail'];
-                }
-                if (!empty($lasterror['smtp_code'])) {
-                    $msg .= ' SMTP code: ' . $lasterror['smtp_code'];
-                }
-                if (!empty($lasterror['smtp_code_ex'])) {
-                    $msg .= ' Additional SMTP info: ' . $lasterror['smtp_code_ex'];
-                }
+            if (!empty($lasterror) and array_key_exists('smtp_msg', $lasterror)) {
+                $msg .= '<p>' . $this->lang('smtp_error') . $lasterror['smtp_msg'] . "</p>\n";
             }
         }
         $this->ErrorInfo = $msg;
@@ -2896,11 +2855,10 @@ class PHPMailer
             $this->setLanguage('en'); // set the default language
         }
 
-        if (array_key_exists($key, $this->language)) {
+        if (isset($this->language[$key])) {
             return $this->language[$key];
         } else {
-            //Return the key as a fallback
-            return $key;
+            return 'Language string failed to load: ' . $key;
         }
     }
 
@@ -3286,14 +3244,12 @@ class PHPMailer
      * @param string $cert_filename
      * @param string $key_filename
      * @param string $key_pass Password for private key
-     * @param string $extracerts_filename Optional path to chain certificate
      */
-    public function sign($cert_filename, $key_filename, $key_pass, $extracerts_filename = '')
+    public function sign($cert_filename, $key_filename, $key_pass)
     {
         $this->sign_cert_file = $cert_filename;
         $this->sign_key_file = $key_filename;
         $this->sign_key_pass = $key_pass;
-        $this->sign_extracerts_file = $extracerts_filename;
     }
 
     /**
@@ -3327,7 +3283,7 @@ class PHPMailer
     {
         if (!defined('PKCS7_TEXT')) {
             if ($this->exceptions) {
-                throw new phpmailerException($this->lang('extension_missing') . 'openssl');
+                throw new phpmailerException($this->lang('signing') . ' OpenSSL extension missing.');
             }
             return '';
         }
@@ -3411,8 +3367,8 @@ class PHPMailer
                 $to_header = $header;
                 $current = 'to_header';
             } else {
-                if (!empty($$current) && strpos($header, ' =?') === 0) {
-                    $$current .= $header;
+                if ($current && strpos($header, ' =?') === 0) {
+                    $current .= $header;
                 } else {
                     $current = '';
                 }

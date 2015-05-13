@@ -190,7 +190,10 @@ switch ($task) {
         } else {
             $parametroTipoPago = "";
         }
-        $criterio_Final = $parametro . $parametroestado;
+        $criterio_Final = "1";
+        if($parametro != ""){
+            $criterio_Final = $parametro . $parametroestado;
+        }
         if ($criterio_Final != '' && $parametroTipoPago != '') {
             $criterio_Final = $criterio_Final . " AND ";
         }
@@ -242,17 +245,21 @@ switch ($task) {
         $dt->setTitleTable(TABLA_TITULO_ORDENES);
 
 
-        $titulos = array(REINTEGRO, NUMERO_ORDEN_PAGO, FECHA_ORDEN, ESTADO_ORDEN, TIPO_ACTIVIDAD_ORDEN,
-            ACTIVIDAD_ORDEN, NOMBRE_PROVEEDOR_ORDEN_PAGO, NUMERO_FACTURA, NUMERO_DOCUMENTO_SOPORTE_UT, MONEDA_ORDEN, TASA_ORDEN,
-            VALOR_TOTAL_ORDEN, FECHA_PAGO_ORDEN, ARCHIVO_ORDEN, OBSERVACIONES_ORDEN);
+        $titulos = array(REINTEGRO, NUMERO_ORDEN_PAGO, FECHA_ORDEN, 
+			//ESTADO_ORDEN, 
+			TIPO_ACTIVIDAD_ORDEN,
+            ACTIVIDAD_ORDEN, NOMBRE_PROVEEDOR_ORDEN_PAGO, 
+			//NUMERO_FACTURA, 
+			NUMERO_DOCUMENTO_SOPORTE_UT, MONEDA_ORDEN, TASA_ORDEN,
+            VALOR_TOTAL_ORDEN, AMORTIZACION_ORDEN, FECHA_PAGO_ORDEN, ARCHIVO_ORDEN, OBSERVACIONES_ORDEN);
         $dt->setDataRows($ordenesdepago);
         $dt->setTitleRow($titulos);
         $dt->setEditLink("?mod=" . $modulo . "&niv=" . $niv . "&task=EditarOrden");
         $dt->setDeleteLink("?mod=" . $modulo . "&niv=" . $niv . "&task=BorrarOrden");
         $dt->setSeeLink("?mod=productos&task=list&niv=" . $niv);
         $dt->setAddLink("?mod=" . $modulo . "&niv=" . $niv . "&task=Agregarorden&bandera=true");
-        $dt->setFormatRow(array(null, null, null, null, null, null, null, null, null, null, array(2, ',', '.'), array(2, ',', '.')));
-        $dt->setSumColumns(array(12));
+        $dt->setFormatRow(array(null, null, null, null, null, null, null, null, array(2, ',', '.'), array(2, ',', '.'), array(2, ',', '.'), null, null, null));
+        $dt->setSumColumns(array(10,11));
         $dt->setType(1);
         $dt->setPag(1);
         $dt->writeDataTable($niv);
@@ -407,18 +414,18 @@ switch ($task) {
         $ventana->createventanadesplegable('actividad', 'actividad', 'Agregarorden');
         $form->addEtiqueta(SELECCINE_ACTIVIDAD_ORDEN_FILTRO);
 //el link de la ventana se lo pasamos como atributo al elemento en el cual quedara adjunto
-        $form->addSelectLink('selectlink', 'sel_actividad', 'sel_actividad', $opcionesactividades, SELECCINE_TIPO_ACTIVIDAD_ORDEN_FILTRO, $actividad, '', '', '<a href="#" id="openactividad"><img src="templates/img/ico/agregar.gif"/></a>');
+        $form->addSelectLink('selectlink', 'sel_actividad', 'sel_actividad', $opcionesactividades, SELECCINE_TIPO_ACTIVIDAD_ORDEN_FILTRO, $actividad, '', '', '');
         $form->addError('error_sel_actividad', ERROR_SEL_TIPO_ACTIVIDAD);
 
 
         $ventana->createventanadesplegable('proveedor', 'proveedor', 'Agregarorden');
         $form->addEtiqueta(SELECCINE_PROVEEDOR_ORDEN_FILTRO);
-        $form->addSelectLink('selectlink', 'sel_proveedor', 'sel_proveedor', $opcionesproveedores, SELECCINE_PROVEEDOR_ORDEN_FILTRO, $proveedor, '', '', '<a href="#" id="openproveedor"><img src="templates/img/ico/agregar.gif"/></a>');
+        $form->addSelectLink('selectlink', 'sel_proveedor', 'sel_proveedor', $opcionesproveedores, SELECCINE_PROVEEDOR_ORDEN_FILTRO, $proveedor, '', '', '');
         $form->addError('error_sel_proveedor', ERROR_SEL_PROVEEDOR);
 
         $ventana->createventanadesplegable('moneda', 'moneda', 'Agregarorden');
         $form->addEtiqueta(SELECCINE_MONEDA);
-        $form->addSelectLink('selectlink', 'sel_moneda', 'sel_moneda', $opcionesmonedas, SELECCINE_MONEDA, $moneda, '', 'onChange=submit();', '<a href="#" id="openmoneda"><img src="templates/img/ico/agregar.gif"/></a>');
+        $form->addSelectLink('selectlink', 'sel_moneda', 'sel_moneda', $opcionesmonedas, SELECCINE_MONEDA, $moneda, '', 'onChange=submit();', '');
         $form->addError('error_sel_moneda', ERROR_SEL_MONEDA);
         if ($moneda != 1 && $moneda > 0) {
             $form->addEtiqueta(TASA_ORDEN);
@@ -472,7 +479,9 @@ switch ($task) {
         
         $form->addEtiqueta(CONTRATO_ORDEN_FILTRO);
         $form->addSelect('select', 'sel_contrato', 'sel_contrato', $opciones, '', $contrato, '', '', '');
-        $form->addError('error_sel_actividad', ERROR_SEL_CONTRATO);
+        
+        $form->addEtiqueta(AMORTIZACION_ORDEN);
+        $form->addInputText('text', 'txt_amortizacion', 'txt_amortizacion', '19', '19', '', '', '');
 
         $form->addInputButton('button', 'ok', 'ok', BTN_ADELANTE, 'button', 'onclick="validar_agregar_ordendepago();"');
         $form->addInputButton('button', 'cancel', 'cancel', BTN_CANCELAR, 'button', 'onclick="cancelarAccionoradicionarEditar(\'frm_agregar_orden\',\'?mod=' . $modulo . '&task=list&niv=' . $niv . '\');"');
@@ -631,6 +640,7 @@ switch ($task) {
         $ordenesdepago = new COrdenesdepago($id_edit, '', '', '', '', '', '', '', '', '', '', '', '', '', '', $docData);
         $ordenesdepago->cargarordendepago();
         $contratoA = $ordenesdepago->getContrato();
+        $amortizacion = $ordenesdepago->getAmortizacion();
         if(isset($_REQUEST['sel_contrato'])){
             $contratoA = $_REQUEST['sel_contrato'];
         }
@@ -876,7 +886,10 @@ switch ($task) {
         $form->addEtiqueta(CONTRATO_ORDEN_FILTRO);
         $form->addSelect('select', 'sel_contrato', 'sel_contrato', $opciones, '', $contratoA, '', '', '');
         $form->addError('error_sel_actividad', ERROR_SEL_CONTRATO);
-
+        
+        $form->addEtiqueta(AMORTIZACION_ORDEN);
+        $form->addInputText('text', 'txt_amortizacion', 'txt_amortizacion', '19', '19', $amortizacion, '', '');
+        
         $form->addInputButton('button', 'ok', 'ok', BTN_ACEPTAR, 'button', 'onclick="validar_editar_ordendepago();"');
         $form->addInputButton('button', 'cancel', 'cancel', BTN_CANCELAR, 'button', 'onclick="cancelarAccionordendepago(\'frm_editar_orden\',\'?mod=' . $modulo . '&task=list&niv=' . $niv . '\');"');
 
@@ -918,6 +931,7 @@ switch ($task) {
         if($contrato == "-1"){
             $contrato = NULL;
         }
+        $amortizacion = $_REQUEST['txt_amortizacion'];
 
         $ordenesdepago = new COrdenesdepago($id_edit, $tipo_actividad_edit, 
                                             $actividad_edit, $numerordendepago_edit, 
@@ -926,7 +940,7 @@ switch ($task) {
                                             $tasaorden_edit, $valortotal_edit, 
                                             $estado_edit, $fechapagoorden_edit, 
                                             $observacionesorden_edit, $numero_proveedor_edit, 
-                                            $archivo, $docData, $contrato);
+                                            $archivo, $docData, $contrato, $amortizacion);
         $m = $ordenesdepago->guardarEdicionOrden($archivo_anterior, $fecha_anterior_orden);
         echo $html->generaAviso($m, "?mod=" . $modulo . "&niv=" . $niv . "&task=list");
 
