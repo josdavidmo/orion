@@ -21,7 +21,7 @@
  */
 Class CData {
 
-	var $link;
+    var $link;
     var $host = null;
     var $usuario = null;
     var $password = null;
@@ -51,7 +51,7 @@ Class CData {
             exit;
         }
         mysql_select_db($this->database, $this->link);
-		mysql_query("SET NAMES 'utf8'");
+        mysql_query("SET NAMES 'utf8'");
     }
 
     /**
@@ -63,12 +63,11 @@ Class CData {
         //echo ("<br>sql:".$sql);
         $result = mysql_query($sql);
 
-        if ($result){
+        if ($result) {
             //$this->log->writeLog($sql);
             return $result;
-        }
-        else {
-            $this->log->writeLog($sql."|".mysql_error());
+        } else {
+            $this->log->writeLog($sql . "|" . mysql_error());
         }
     }
 
@@ -102,16 +101,16 @@ Class CData {
      * @param string $valores valores almacenados
      */
     function insertarRegistro($tabla, $campos, $valores) {
-        $temp = split(",",$valores);
+        $temp = split(",", $valores);
         $valores = "";
-        foreach ($temp as $t){
-            if($t == "''"){
+        foreach ($temp as $t) {
+            if ($t == "''") {
                 $valores .= 'null,';
-            }else{
-                $valores .= $t.",";
+            } else {
+                $valores .= $t . ",";
             }
         }
-        $valores = substr($valores, 0,  strlen($valores)-1);
+        $valores = substr($valores, 0, strlen($valores) - 1);
         $sql = "insert into `" . $tabla . "`(" . $campos . ")values(" . $valores . ")";
         //echo $sql."<hr>";
         $row = mysql_query($sql);
@@ -123,7 +122,7 @@ Class CData {
             return "false";
         }
     }
-    
+
     /**
      * almacena en la base datos de acuerdo a los parametros
      *
@@ -132,16 +131,16 @@ Class CData {
      * @param string $valores valores almacenados
      */
     function insertarVariosRegistros($tabla, $campos, $valores) {
-        $temp = split(",",$valores);
+        $temp = split(",", $valores);
         $valores = "";
-        foreach ($temp as $t){
-            if($t == "''"){
+        foreach ($temp as $t) {
+            if ($t == "''") {
                 $valores .= 'null,';
-            }else{
-                $valores .= $t.",";
+            } else {
+                $valores .= $t . ",";
             }
         }
-        $valores = substr($valores, 0,  strlen($valores)-1);
+        $valores = substr($valores, 0, strlen($valores) - 1);
         $sql = "insert into `" . $tabla . "`(" . $campos . ")values " . $valores;
         //echo $sql."<hr>";
         $row = mysql_query($sql);
@@ -172,13 +171,13 @@ Class CData {
             return "false";
         }
     }
-    
+
     function eliminarMultiplesRegistros($tabla, $predicado) {
         $sql = "delete from " . $tabla . " where " . $predicado;
         //echo ("<br>borrar:".$sql);
         $row = mysql_query($sql);
         if ($row == 1) {
-           $this->log->writeLog($sql);
+            $this->log->writeLog($sql);
         } else {
             $this->log->writeLog(mysql_error());
         }
@@ -198,7 +197,7 @@ Class CData {
         $cont = 0;
 
         foreach ($campos as $c) {
-            if($valores[$cont] == "''" || $valores[$cont] == "")
+            if ($valores[$cont] == "''" || $valores[$cont] == "")
                 $sql .= $c . " = null , ";
             else
                 $sql .= $c . " = " . $valores[$cont] . ", ";
@@ -216,14 +215,14 @@ Class CData {
             return "false";
         }
     }
-    
-    function getMaxValue($tabla, $campo){
-        $sql = "SELECT MAX(".$campo.") AS max FROM ". $tabla;
+
+    function getMaxValue($tabla, $campo) {
+        $sql = "SELECT MAX(" . $campo . ") AS max FROM " . $tabla;
         $result = $this->ejecutarConsulta($sql);
         $row = mysql_fetch_array($result);
         return $row["max"];
     }
-    
+
     /**
      * Obtiene las columnas de una tabla.
      * @param type $tabla
@@ -242,14 +241,14 @@ Class CData {
         }
         return $columnas;
     }
-    
+
     /**
      * Almacena un archivo en la ruta historial bitacora.
      * @param type $archivo
      * @return type
      */
     public function guardarArchivo($archivo, $ruta) {
-        $ruta = RUTA_DOCUMENTOS . "/". $ruta ."/";
+        $ruta = RUTA_DOCUMENTOS . "/" . $ruta . "/";
         $carpetas = explode("/", substr($ruta, 0, strlen($ruta) - 1));
         $ruta_destino = '';
         foreach ($carpetas as $c) {
@@ -267,10 +266,10 @@ Class CData {
         $ruta_destino .= "/";
         return move_uploaded_file($archivo['tmp_name'], utf8_decode($ruta_destino . $archivo['name']));
     }
-	
-	public function cerrarConexion(){
-		mysql_close($this->link);
-	}
+
+    public function cerrarConexion() {
+        mysql_close($this->link);
+    }
 
 }
 ?>

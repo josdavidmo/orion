@@ -1,5 +1,5 @@
 <?php
-define("DIRECCION_WEB_SERVICE_SINCRONIZACION","http://192.168.0.16/orion/standAlone.php");
+define("DIRECCION_WEB_SERVICE_SINCRONIZACION","http://pncav.sisinfoits.com:8095/standAlone.php");
 define("SERVIDOR_NO_DISPONIBLE","El Servidor no se encuentra disponible");
 define("NO_EXISTE_SINCRONIZACION","No existen elementos para sincronizar");
 define("ERROR_CONEXION","Ocurrio un error durante la conexión");

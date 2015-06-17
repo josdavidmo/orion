@@ -46,7 +46,7 @@ switch ($task) {
         $form->setMethod('post');
         $form->setOptions('autoClean', false);
         $form->setAction('?mod=' . $modulo . '&niv=1&task=sync');
-        //$form->addInputButton('submit', 'sync', 'sync', BTN_SINCRONIZAR, 'button', '');
+        $form->addInputButton('submit', 'sync', 'sync', BTN_SINCRONIZAR, 'button', '');
         $form->writeForm();
         $dt = new CHtmlDataTable();
         $dt->setTitleTable(TITULO_BITACORA_PERSONAL . " " . $usuario['usu_nombre'] . " " . $usuario['usu_apellido']);
@@ -63,69 +63,33 @@ switch ($task) {
         break;
     
     case 'sync':
+        $m1 = $daoBitacora->recibirBitacoras($id_usuario);
+        $m2 = $daoActividadBitacora->enviarActividades($id_usuario);
+        $m3 = $daoGastos->enviarGastos($id_usuario);
+        $m4 = $daoHallazgosPendientes->enviarHallazgos($id_usuario);
+        $m5 = $daoRegistroFotografico->enviarRegistroFotografico($id_usuario);
+        
         $form = new CHtmlForm();
-        $form->setId('frm_sync');
+        $form->setTitle(RESULTADO_SINCRONIZACION);
         $form->setMethod('post');
+        $form->setOptions('autoClean', false);
+        $form->setAction('?mod=' . $modulo . '&niv=1&task=list');
+        $form->addInputButton('submit', 'sync', 'sync', BTN_ATRAS, 'button', '');
         $form->writeForm();
-        $data = null;
-        $cont=0;
-        
-        $bitacoras = $daoBitacora->getBitacorasSincronizacion($id_usuario);
-        $actividades = $daoActividadBitacora->getActividadesSincronizacion($id_usuario,$html);
-        $registrosFotograficos = $daoRegistroFotografico->getRegistroFotograficoSincronizacion($id_usuario,$html);
-        $gastos = $daoGastos->getGastosSincronizacion($id_usuario,$html);
-        $hallazgos = $daoHallazgosPendientes->getHallazgosSincronizacion($id_usuario,$html);
-        
-        $data = new arrayOfBitacora($bitacoras,$actividades,null,$hallazgos,$registrosFotograficos,$gastos);
-        $client = new SoapClient(DIRECCION_WEB_SERVICE_SINCRONIZACION);
-        // Paramters in PHP are passed via associative arrays
-        $password= $ejeData->consultarPassUsuario($id_usuario);        
-        $params = array("user"=>$id_usuario, "pass"=>$password, "data"=>$data);
-        $cbitacora=null;
-        $result = $client->sicronizarBitacora($params);
-        $paquete = $result->return;
-        $bits=$paquete->bitacoras;
-        $anticipos=$paquete->anticipos;
-        
-        if (count($bits) == 1) {
-            $cbitacora = new CBitacora($bits->idBitacora, $bits->idUsuario, $bits->idBeneficiario, $bits->descripcionActividad, $bits->fechaInicio, $bits->fechaFin);
-            $daoBitacora->insertBitacoraSync($cbitacora);
-        } else {
-            for ($i = 0; $i < count($bits); $i++) {
-                $cbitacora = new CBitacora($bits[$i]->idBitacora, $bits[$i]->idUsuario, $bits[$i]->idBeneficiario, $bits[$i]->descripcionActividad, $bits[$i]->fechaInicio, $bits[$i]->fechaFin);
-
-                $daoBitacora->insertBitacoraSync($cbitacora);
-            }
-        }
-
-        if (count($anticipos) == 1) {
-            $cAnticipo = new CAnticipo($anticipos->idAnticipo, $anticipos->fecha, $anticipos->valor, $anticipos->idBitacora);
-            $daoAnticipo->insertAnticipo($cAnticipo);
-        } else {
-            for ($i = 0; $i < count($anticipos); $i++) {
-                $cAnticipo = new CAnticipo($anticipos[$i]->idAnticipo, $anticipos[$i]->fecha, $anticipos[$i]->valor, $anticipos[$i]->idBitacora);
-                $daoAnticipo->insertAnticipo($cAnticipo);
-            }
-        }
-        
-        for($i=0;$i<count($actividades);$i++){
-            $daoBitacora->setSync("actividad", "idActividad", $actividades[$i]->getIdActividad(), 0);
-        }
-        for($i=0;$i<count($registrosFotograficos);$i++){
-            $daoBitacora->setSync("registrofotografico", "idRegistroFotografico", 
-                    $registrosFotograficos[$i]->getIdRegistroFotografico(), 0);
-        }
-        for($i=0;$i<count($gastos);$i++){
-            $daoBitacora->setSync("gastos_actividad", "idGastosActividad", $gastos[$i]->getIdGastosActividad(), 0);
-        }
-        for($i=0;$i<count($hallazgos);$i++){
-            $daoBitacora->setSync("hallazgospendientes", "idHallazgosPendientes", $hallazgos[$i]->getIdHallazgosPendientes(), 0);
-        }
-        //$mens= "" . $result->return;
-//        if(!strpos($mens,'error')|| !strpos($mens,'Error')){
-//            $ejeData->setSyncEncuesta($id_element, 0);
-//        }
-        echo $html->generaAviso("Se agregaron ".count($paquete->bitacoras)." nuevos objetivos", "?mod=" . $modulo . "&niv=" . $niv . "&task=list");
+        $titulos = array(CONCEPTO_SINCRONIZACION, MENSAJE_SINCRONIZACION);
+        $datos = array(array(NULL,NUEVAS_BITACORAS,$m1),
+                       array(NULL,ACTIVIDADES_ENVIADAS,$m2),
+                       array(NULL,GASTOS_ENVIADOS,$m3),
+                       array(NULL,HALLAZGOS_ENVIADOS,$m4),
+                       array(NULL,REGISTROS_FOTOGRAFICOS_ENVIADOS,$m5));
+        $dt = new CHtmlDataTable();
+        $dt->setTitleTable(TITULO_BITACORA_PERSONAL . " " . $usuario['usu_nombre'] . " " . $usuario['usu_apellido']);
+        $dt->setTitleRow($titulos);
+        $dt->setDataRows($datos);
+        $dt->setType(1);
+        $pag_crit = "";
+        $dt->setPag(1, $pag_crit);
+        $dt->writeDataTable($niv);
         break;
 
     /**
@@ -605,8 +569,8 @@ switch ($task) {
         break;
 
     case 'editPhoto':
-        $idGasto = $_REQUEST['id_element'];
-        $gasto = $daoRegistroFotografico->getRegistroFotograficoById($idRegistroFotografico);
+        $idRegistroFotografico = $_REQUEST['id_element'];
+        $registroFotografico = $daoRegistroFotografico->getRegistroFotograficoById($idRegistroFotografico);
         $idActividad = $_REQUEST['idActividad'];
         $idBitacora = $_REQUEST['idBitacora'];
         $form = new CHtmlForm();
@@ -700,7 +664,7 @@ switch ($task) {
             }
         }
 
-        $form->addEtiqueta(ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_CLASIFICACION);
+        $form->addEtiqueta(ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_AREA);
         $form->addSelect('select', 'sel_area', 'sel_area', $opciones, '', $area, '', 'onChange="submit();" required');
 
         $tipos = $daoBasicas->getBasicas('tipohallazgo', $criterio);
@@ -714,6 +678,18 @@ switch ($task) {
 
         $form->addEtiqueta(ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_CLASIFICACION);
         $form->addSelect('select', 'sel_tipo', 'sel_tipo', $opciones, '', '', '', ' required');
+        
+        $tipos = $daoBasicas->getBasicas('clasificacionhallazgo');
+        $opciones = null;
+        if (isset($tipos)) {
+            foreach ($tipos as $tipo) {
+                $opciones[count($opciones)] = array('value' => $tipo->getId(),
+                    'texto' => $tipo->getDescripcion());
+            }
+        }
+
+        $form->addEtiqueta(ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_TIPO);
+        $form->addSelect('select', 'sel_clasificacion', 'sel_clasificacion', $opciones, '', '', '', ' required');
 
         $form->addEtiqueta(BITACORA_ACTIVIDAD_GASTO_ARCHIVO);
         $form->addInputFile('file', 'file_archivo', 'file_archivo', '25', 'file', '');
@@ -728,10 +704,11 @@ switch ($task) {
         $idActividad = $_REQUEST['idActividad'];
         $idBitacora = $_REQUEST['idBitacora'];
         $clasificacion = $_REQUEST['sel_tipo'];
+        $tipo = $_REQUEST['sel_clasificacion'];
         $observacion = $_REQUEST['txt_descripcion'];
         $archivo = $_FILES['file_archivo'];
 
-        $hallazgoPendiente = new CHallazgosPendientes(null, $observacion, $clasificacion, $idActividad, $archivo);
+        $hallazgoPendiente = new CHallazgosPendientes(null, $observacion, $clasificacion, $idActividad, $tipo, $archivo);
 
         $r = $daoHallazgosPendientes->insertHallazgosPendientes($hallazgoPendiente);
         $m = ERROR_AGREGAR_ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES;
@@ -767,6 +744,11 @@ switch ($task) {
         if ($tipoH == NULL) {
             $tipoH = $hallazgoPendiente->getTipo();
         }
+        
+        $clasificacionH = $_REQUEST['sel_clasificacion'];
+        if ($clasificacionH == NULL) {
+            $clasificacionH = $hallazgoPendiente->getClasificacion();
+        }
 
         $form = new CHtmlForm();
         $form->setTitle(TITULO_EDITAR_ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES);
@@ -787,7 +769,7 @@ switch ($task) {
             }
         }
 
-        $form->addEtiqueta(ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_CLASIFICACION);
+        $form->addEtiqueta(ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_AREA);
         $form->addSelect('select', 'sel_area', 'sel_area', $opciones, '', $area, '', 'onChange="submit();" required');
 
         $tipos = $daoBasicas->getBasicas('tipohallazgo', $criterio);
@@ -801,6 +783,18 @@ switch ($task) {
 
         $form->addEtiqueta(ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_CLASIFICACION);
         $form->addSelect('select', 'sel_tipo', 'sel_tipo', $opciones, '', $tipoH, '', ' required');
+        
+        $tipos = $daoBasicas->getBasicas('clasificacionhallazgo');
+        $opciones = null;
+        if (isset($tipos)) {
+            foreach ($tipos as $tipo) {
+                $opciones[count($opciones)] = array('value' => $tipo->getId(),
+                    'texto' => $tipo->getDescripcion());
+            }
+        }
+
+        $form->addEtiqueta(ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_TIPO);
+        $form->addSelect('select', 'sel_clasificacion', 'sel_clasificacion', $opciones, '', $clasificacionH, '', ' required');
 
         $form->addEtiqueta(BITACORA_ACTIVIDAD_GASTO_ARCHIVO);
         $form->addInputFile('file', 'file_archivo', 'file_archivo', '25', 'file', '');
@@ -816,10 +810,11 @@ switch ($task) {
         $idActividad = $_REQUEST['idActividad'];
         $idBitacora = $_REQUEST['idBitacora'];
         $clasificacion = $_REQUEST['sel_tipo'];
+        $tipo = $_REQUEST['sel_clasificacion'];
         $observacion = $_REQUEST['txt_descripcion'];
         $archivo = $_FILES['file_archivo'];
 
-        $hallazgoPendiente = new CHallazgosPendientes($idHallazgoPendiente, $observacion, $clasificacion, $idActividad, $archivo);
+        $hallazgoPendiente = new CHallazgosPendientes($idHallazgoPendiente, $observacion, $clasificacion, $idActividad, $tipo, $archivo);
 
         $r = $daoHallazgosPendientes->updateHallazgosPendientes($hallazgoPendiente);
         $m = ERROR_EDITAR_ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES;

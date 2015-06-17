@@ -114,6 +114,39 @@ class CPlaneacionAutocontrolData {
         }
         return $planeacionAutocontrol;
     }
+    
+    /**
+     * Obtiene la planeacion del autocontrol dado el responsable.
+     * @return type
+     */
+    public function getPlaneacionAutocontrol($criterio = "1") {
+        $planeacionAutocontrol = null;
+        $sql = "SELECT idActividades, objetivos, descripcion, " 
+                . "CONCAT(u.usu_nombre,' ', u.usu_apellido) as responsable, " 
+                . "CONCAT(r.usu_nombre,' ', r.usu_apellido) as responsablePNC, "
+                . "(SELECT GROUP_CONCAT(descripcion SEPARATOR '\n ') FROM fuentedatos f WHERE f.idActividad = a.idActividades) as fuentedatos, "
+                . "(SELECT GROUP_CONCAT(descripcion SEPARATOR '\n ') FROM registro r WHERE r.idActividad = a.idActividades) as registro "
+                . "FROM actividadescontrol a " 
+                . "INNER JOIN planeacionautocontrol p ON p.idPlaneacionAutocontrol = a.idPlaneacionAutocontrol "
+                . "INNER JOIN usuario u ON u.usu_id = p.idResponsable "
+                . "INNER JOIN usuario r ON r.usu_id = p.idResponsablePNC "
+                . "WHERE $criterio";
+        $r = $this->db->ejecutarConsulta($sql);
+        if ($r) {
+            $cont = 0;
+            while ($w = mysql_fetch_array($r)) {
+                $planeacionAutocontrol[$cont]['idActividades'] = $w['idActividades'];
+                $planeacionAutocontrol[$cont]['objetivo'] = $w['objetivos'];
+                $planeacionAutocontrol[$cont]['actividad'] = $w['descripcion'];
+                $planeacionAutocontrol[$cont]['responsable'] = $w['responsable'];
+                $planeacionAutocontrol[$cont]['responsablePNC'] = $w['responsablePNC'];
+                $planeacionAutocontrol[$cont]['fuentedatos'] = $w['fuentedatos'];
+                $planeacionAutocontrol[$cont]['registro'] = $w['registro'];
+                $cont++;
+            }
+        }
+        return $planeacionAutocontrol;
+    }
 
     /**
      * Obtiene la planeacion del autocontrol dado el responsable.
@@ -147,17 +180,20 @@ class CPlaneacionAutocontrolData {
     public function getPlaneacionAutocontrolByResponsablePNC($idResponsablePNC) {
         $planeacionAutocontrol = null;
         $sql = "SELECT p.idPlaneacionAutocontrol, p.objetivos, "
-                . "CONCAT(u.usu_nombre,' ',u.usu_apellido) as nombre "
-                . "FROM planeacionautocontrol p, usuario u "
+                . "CONCAT(u.usu_nombre,' ',u.usu_apellido) as nombre, "
+                . "CONCAT(r.usu_nombre,' ',r.usu_apellido) as responsable "
+                . "FROM planeacionautocontrol p, usuario u, usuario r "
                 . "WHERE p.idResponsablePNC = " . $idResponsablePNC . " AND "
-                . "p.IdResponsablePNC = u.usu_id";
+                . "p.IdResponsablePNC = u.usu_id AND "
+                . "p.idResponsable = r.usu_id";
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             $cont = 0;
             while ($w = mysql_fetch_array($r)) {
                 $planeacionAutocontrol[$cont]['idPlaneacionAutocontrol'] = $w['idPlaneacionAutocontrol'];
                 $planeacionAutocontrol[$cont]['objetivos'] = $w['objetivos'];
-                $planeacionAutocontrol[$cont]['responsablePNC'] = $w['nombre'];
+                $planeacionAutocontrol[$cont]['responsablePNC'] = $w['nombre'];      
+                $planeacionAutocontrol[$cont]['responsable'] = $w['responsable'];
                 $cont++;
             }
         }
@@ -165,19 +201,18 @@ class CPlaneacionAutocontrolData {
     }
 
     /**
-     * Obtiene las observaciones de un autocontrol.
-     * @param type $idAutocontrol
+     * Obtiene las observaciones de un actividad.
+     * @param type $idActividad
      * @return type
      */
-    public function getObservacionesByIdAutocontrol($idAutocontrol) {
+    public function getObservacionesByIdActividad($idActividad) {
         $observaciones = null;
         $sql = "SELECT o.idObservacionAutocontrol, "
                 . "DATE_FORMAT(o.periodo, '%b-%y') as periodo, "
                 . "o.descripcion, t.descripcion as estado "
                 . "FROM observacionautocontrol o, tipoobservacion t "
-                . "WHERE o.idAutocontrol = " . $idAutocontrol . " AND "
+                . "WHERE o.idActividad = " . $idActividad . " AND "
                 . "o.estado = t.idtipoObservacion ORDER BY o.periodo ASC";
-        echo sql;
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {   
             $cont = 0;
@@ -203,7 +238,34 @@ class CPlaneacionAutocontrolData {
                 . "DATE_FORMAT(o.periodo, '%b-%y') as periodo, "
                 . "o.descripcion, t.descripcion as estado "
                 . "FROM observacionautocontrol o, tipoobservacion t "
-                . "WHERE o.idControl = " . $idControl . " AND "
+                . "WHERE o.idControl = $idControl AND "
+                . "o.estado = t.idtipoObservacion ORDER BY o.periodo ASC";
+        $r = $this->db->ejecutarConsulta($sql);
+        if ($r) {
+            $cont = 0;
+            while ($w = mysql_fetch_array($r)) {
+                $observaciones[$cont]['idObservacionAutocontrol'] = $w['idObservacionAutocontrol'];
+                $observaciones[$cont]['periodo'] = $w['periodo'];
+                $observaciones[$cont]['descripcion'] = $w['descripcion'];
+                $observaciones[$cont]['estado'] = $w['estado'];
+                $cont++;
+            }
+        }
+        return $observaciones;
+    }
+    
+    /**
+     * Obtiene las observaciones de un autocontrol.
+     * @param type $idActividad
+     * @return type
+     */
+    public function getObservacionesByIdAutocontrol($idActividad) {
+        $observaciones = null;
+        $sql = "SELECT o.idObservacionAutocontrol, "
+                . "DATE_FORMAT(o.periodo, '%b-%y') as periodo, "
+                . "o.descripcion, t.descripcion as estado "
+                . "FROM observacionautocontrol o, tipoobservacion t "
+                . "WHERE o.idActividad = $idActividad AND "
                 . "o.estado = t.idtipoObservacion ORDER BY o.periodo ASC";
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
@@ -219,11 +281,16 @@ class CPlaneacionAutocontrolData {
         return $observaciones;
     }
 
-    public function getFechaAndCantidad() {
+    public function getFechaAndCantidad($control = TRUE) {
         $cantidad = null;
         $query = "SELECT MIN(periodo) as fechaMinima, "
                   . "(12 * (YEAR(NOW()) - YEAR(MIN(periodo))) + MONTH(NOW()) - MONTH(MIN(periodo))) as meses "
-                  . "FROM pncav2.observacionautocontrol b;";
+                  . "FROM observacionautocontrol b";
+        if($control){
+            $query .= " WHERE idControl IS NOT NULL"; 
+        } else {
+            $query .= " WHERE idActividad IS NOT NULL";
+        }
         $r = $this->db->ejecutarConsulta($query);
         if ($r) {
             $w = mysql_fetch_array($r);
@@ -290,7 +357,7 @@ class CPlaneacionAutocontrolData {
      */
     public function insertObservacion($observacion) {
         $tabla = "observacionautocontrol";
-        $campos = "periodo,descripcion,idAutocontrol,estado,idControl";
+        $campos = "periodo,descripcion,idActividad,estado,idControl";
         $valores = "'" . $observacion->getPeriodo() . "','"
                 . $observacion->getDescripcion() . "','"
                 . $observacion->getAutocontrol() . "','"

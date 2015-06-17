@@ -52,39 +52,23 @@ class CBeneficiario {
     var $centroPoblado = null;
     /** Almacena el tipo de beneficiario. */
     var $tipo = null;
-    /** Almacena Observaciones de beneficiario. */
-    var $observaciones = null;
-	
-    /**
-     * Constructor de la clase.
-     * @param type $idBeneficiario
-     * @param type $codigoInterventoria
-     * @param type $codigoMintic
-     * @param type $codigoOperador
-     * @param type $nombre
-     * @param type $msnm
-     * @param type $latitudGrados
-     * @param type $latitudMinutos
-     * @param type $latitudSegundos
-     * @param type $south
-     * @param type $longitudGrados
-     * @param type $longitudMinutos
-     * @param type $longitudSegundos
-     * @param type $west
-     * @param type $meta
-     * @param type $estado
-     * @param type $dda
-     * @param type $grupo
-     * @param type $centroPoblado
-     * @param type $tipo
-	 * @param type $Observaciones
-     */
-    function CBeneficiario($idBeneficiario, $codigoInterventoria, $codigoMintic, 
-                           $codigoOperador, $nombre, $msnm, $latitudGrados, 
-                           $latitudMinutos, $latitudSegundos, $south, 
-                           $longitudGrados, $longitudMinutos, $longitudSegundos, 
-                           $west, $fechaInicio, $meta, $estado, $observaciones, $dda, $grupo, 
-						   $centroPoblado, $tipo) {
+    var $observacion = null;
+    
+    function getObservacion() {
+        return $this->observacion;
+    }
+
+    function setObservacion($observacion) {
+        $this->observacion = $observacion;
+    }
+
+            
+    function __construct($idBeneficiario, $codigoInterventoria, $codigoMintic, 
+                         $codigoOperador, $nombre, $msnm, $latitudGrados, 
+                         $latitudMinutos, $latitudSegundos, $south, 
+                         $longitudGrados, $longitudMinutos, $longitudSegundos, 
+                         $west, $fechaInicio, $meta, $estado, $dda, $grupo, 
+                         $centroPoblado, $tipo, $observacion) {
         $this->idBeneficiario = $idBeneficiario;
         $this->codigoInterventoria = $codigoInterventoria;
         $this->codigoMintic = $codigoMintic;
@@ -92,22 +76,23 @@ class CBeneficiario {
         $this->nombre = $nombre;
         $this->msnm = $msnm;
         $this->latitudGrados = $latitudGrados;
+        $this->latitudMinutos = $latitudMinutos;
         $this->latitudSegundos = $latitudSegundos;
         $this->south = $south;
         $this->longitudGrados = $longitudGrados;
         $this->longitudMinutos = $longitudMinutos;
+        $this->longitudSegundos = $longitudSegundos;
         $this->west = $west;
-		$this->fechaInicio = $fechaInicio;
+        $this->fechaInicio = $fechaInicio;
         $this->meta = $meta;
         $this->estado = $estado;
         $this->dda = $dda;
         $this->grupo = $grupo;
         $this->centroPoblado = $centroPoblado;
         $this->tipo = $tipo;
-        $this->latitudMinutos = $latitudMinutos;
-        $this->longitudSegundos = $longitudSegundos;
-		$this->observaciones = $observaciones;
+        $this->observacion = $observacion;
     }
+
     
     public function getIdBeneficiario() {
         return $this->idBeneficiario;
@@ -203,14 +188,6 @@ class CBeneficiario {
      */
     public function getTipo() {
         return $this->tipo;
-	}
-	
-	/**
-     * Obtiene Observaciones de beneficiario.
-     * @return \CBasica
-     */
-    public function getObservaciones() {
-        return $this->observaciones;
     }
 
     public function setIdBeneficiario($idBeneficiario) {
@@ -308,8 +285,5 @@ class CBeneficiario {
 	function getFechaInicio() {
         return $this->fechaInicio;
     }
-    public function setObservaciones($observaciones) {
-        $this->observaciones = $observaciones;
-		
-    }
+    
 }

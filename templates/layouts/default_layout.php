@@ -18,6 +18,7 @@
  */
 //no permite el acceso directo
 defined('_VALID_PRY') or die('Restricted access to this level');
+set_time_limit(0);
 $html = new CHtml(APP_TITLE);
 $html->addEstilo('bootstrap.min.css');
 $html->addEstilo('calendar/calendar-blue.css');

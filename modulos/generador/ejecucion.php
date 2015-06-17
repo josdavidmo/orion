@@ -38,9 +38,9 @@ switch ($task) {
             $criterio .= " and m.mun_id = " . $municipio;
         }
         if (isset($estado) && $estado != -1 && $estado != '') {
-            
+
             switch ($estado) {
-                
+
                 case "1":
                     $criterio .= " AND (SELECT count(e.enc_id) FROM generador_encuesta e WHERE e.pla_id = g.pla_id AND e.ees_id)/(SELECT count(e.enc_id) FROM generador_encuesta e WHERE e.pla_id = g.pla_id) = 1";
                     break;
@@ -121,11 +121,11 @@ switch ($task) {
 
         $form->addEtiqueta(INSTRUMENTO);
         $opciones = null;
-		if($ref != ""){
-			$ejes = $planData->getInstrumentos(' idInstrumento', "idEncabezado = $ref");
-		} else {
-			$ejes = $planData->getInstrumentos(' idInstrumento', "1");
-		}
+        if ($ref != "") {
+            $ejes = $planData->getInstrumentos(' idInstrumento', "idEncabezado = $ref");
+        } else {
+            $ejes = $planData->getInstrumentos(' idInstrumento', "1");
+        }
         if (isset($ejes)) {
             foreach ($ejes as $t) {
                 $opciones[count($opciones)] = array('value' => $t['id'], 'texto' => $t['nombre']);
@@ -159,9 +159,9 @@ switch ($task) {
         $pag_crit = "";
         $dt->setPag(1, $pag_crit);
         $dt->writeDataTable($niv);
-        
+
         $criterio = "1";
-        if($ref != NULL){
+        if ($ref != NULL) {
             $criterio .= " AND i.idEncabezado = $ref";
         }
         $ejecucion_resumen = $ejeData->getResumenPlaneacion($criterio);
@@ -222,8 +222,6 @@ switch ($task) {
             $dt->setEditLink("?mod=" . $modulo . "&niv=" . $nivel . "&task=edit&pla=$pla_id");
             $otros = array('link' => "?mod=" . $modulo . "&niv=" . $niv . "&task=deleteEncuesta&pla=" . $pla_id, 'img' => 'delete.png', 'alt' => ALT_AGREGAR_ENCUESTA);
             $dt->addOtrosLink($otros);
-            $otros = array('link' => "?mod=" . $modulo . "&niv=" . $niv . "&task=syncEncuesta&pla=" . $pla_id, 'img' => 'cubrimiento.gif', 'alt' => ALT_SYNC_ENCUESTA);
-            $dt->addOtrosLink($otros);
         }
 
 
@@ -233,110 +231,29 @@ switch ($task) {
         $dt->writeDataTable(1);
         break;
 
-    case 'syncPlaneacion':
-        $form = new CHtmlForm();
-        $form->setId('frm_sync_planeacion');
-        $form->setMethod('post');
-        $form->writeForm();
-        $contEnc = 0;
-        $errores = 0;
-        $planeacionesSync = $ejeData->getSyncPlaneaciones($id_usuario);
-
-        $client = new SoapClient(DIRECCION_WEB_SERVICE_SINCRONIZACION, array('encoding' => 'ISO-8859-1'));
-        // Paramters in PHP are passed via associative arrays
-        $password = $ejeData->consultarPassUsuario($id_usuario);
-        $params = array("user" => $id_usuario, "pass" => $password, "data" => $planeacionesSync);
-
-        $result = $client->sincronizarPlaneacion($params);
-        $planeacionSync = $result->planeaciones;
-        $ejecucionSync = $result->encuestas;
-        $cont = 0;
-        while ($cont < count($planeacionSync)) {
-            $plaId = $planeacionSync[$cont]->pla_id;
-            $beneficiario = $planeacionSync[$cont]->ben_id;
-            $instrumento = $planeacionSync[$cont]->ins_id;
-            $inicio = $planeacionSync[$cont]->pla_fecha_inicio;
-            $fin = $planeacionSync[$cont]->pla_fecha_fin;
-            $numero = $planeacionSync[$cont]->pla_numero_encuestas;
-            $usuario = $planeacionSync[$cont]->usu_id;
-            $municipio = $planeacionSync[$cont]->mun_id;
-
-            $planData->insertPlaneacionSync($beneficiario, $instrumento, $inicio, $fin, $numero, $usuario);
-        }
-        $cont = 0;
-        while ($cont < count($ejecucionSync)) {
-            $enc_id = $ejecucionSync[$cont]->enc_id;
-            $pla_id = $ejecucionSync[$cont]->pla_id;
-            $enc_consecutivo = $ejecucionSync[$cont]->enc_consecutivo;
-            $usu_id = $ejecucionSync[$cont]->usu_id;
-
-            $ejeData->insertEjecucionSync($enc_id, $enc_consecutivo, $pla_id, $usu_id);
-        }
-
-        $mens = "Se sincronizaron " . (count($planeacionSync)) . " planeaciones con " . (count($planeacionSync)) . " encuestas";
-        echo $html->generaAviso($mens, "?mod=" . $modulo . "&niv=" . $niv . "&task=pre-list");
-
-        break;
-
     case 'syncEncuestaGeneral':
+        $respuestas = count($ejeData->getSyncRespuestas());
+        $m1 = $ejeData->enviarRespuestas();
+        $m2 = $planData->recibirEncuestas($id_usuario);
+
         $form = new CHtmlForm();
-        $form->setId('frm_sync_enc_general');
+        $form->setTitle(RESULTADO_SINCRONIZACION);
         $form->setMethod('post');
+        $form->setOptions('autoClean', false);
+        $form->setAction('?mod=' . $modulo . '&niv=1&task=pre-list&ref=' . $ref);
+        $form->addInputButton('submit', 'sync', 'sync', BTN_ATRAS, 'button', '');
         $form->writeForm();
-        $contEnc = 0;
-        $errores = 0;
-        $encuestasSync = $ejeData->getSyncEncuestas(1);
-        while ($contEnc < count($encuestasSync)) {
-            $cont = 0;
-            $data = null;
-            $respuestas = $ejeData->getRespuestas($encuestasSync[$contEnc]['encuesta']);
-            while ($cont < count($respuestas)) {
-                $data[$cont] = new respuesta($respuestas[$cont]['pregunta'], $respuestas[$cont]['encuesta'], ($respuestas[$cont]['respuesta']));
-                $cont++;
-            }
-            $client = new SoapClient(DIRECCION_WEB_SERVICE_SINCRONIZACION, array('encoding' => 'ISO-8859-1'));
-            // Paramters in PHP are passed via associative arrays
-            $password = $ejeData->consultarPassUsuario($id_usuario);
-            $params = array("user" => $id_usuario, "pass" => $password, "data" => $data);
-
-            $result = $client->sicronizar($params);
-            if (!strpos($mens, 'error') || !strpos($mens, 'Error')) {
-                $ejeData->setSyncEncuesta($encuestasSync[$contEnc]['encuesta'], 0);
-            } else {
-                $errores++;
-            }
-            $contEnc++;
-        }
-        $mens = "Se sincronizaron " . (count($encuestasSync) - $errores) . " encuestas";
-        echo $html->generaAviso($mens, "?mod=" . $modulo . "&niv=" . $niv . "&task=pre-list");
-
-        break;
-
-    case 'syncEncuesta':
-        $id_element = $_REQUEST['id_element'];
-        $planeacion = $_REQUEST['pla'];
-        $form = new CHtmlForm();
-        $form->setId('frm_sync_encuesta');
-        $form->setMethod('post');
-        $form->writeForm();
-        $data = null;
-        $cont = 0;
-        $respuestas = $ejeData->getRespuestas($id_element);
-        while ($cont < count($respuestas)) {
-            $data[$cont] = new respuesta($respuestas[$cont]['pregunta'], $respuestas[$cont]['encuesta'], ($respuestas[$cont]['respuesta']));
-            $cont++;
-        }
-        $client = new SoapClient(DIRECCION_WEB_SERVICE_SINCRONIZACION, array('encoding' => 'ISO-8859-1'));
-        // Paramters in PHP are passed via associative arrays
-        $password = $ejeData->consultarPassUsuario($id_usuario);
-        $params = array("user" => $id_usuario, "pass" => $password, "data" => $data);
-
-        $result = $client->sicronizar($params);
-        $mens = "" . $result->return;
-        if (!strpos($mens, 'error') || !strpos($mens, 'Error')) {
-            $ejeData->setSyncEncuesta($id_element, 0);
-        }
-        echo $html->generaAviso($mens, "?mod=" . $modulo . "&niv=" . $niv . "&task=list&pla=$planeacion&id_element=" . $planeacion);
+        $titulos = array(CONCEPTO_SINCRONIZACION, MENSAJE_SINCRONIZACION);
+        $datos = array(array(NULL, RESPUESTAS_ENVIADAS, $m1),
+            array(NULL, ENCUESTAS_RECIBIDAS, $m2));
+        $dt = new CHtmlDataTable();
+        $dt->setTitleTable(RESULTADO_SINCRONIZACION);
+        $dt->setTitleRow($titulos);
+        $dt->setDataRows($datos);
+        $dt->setType(1);
+        $pag_crit = "";
+        $dt->setPag(1, $pag_crit);
+        $dt->writeDataTable($niv);
         break;
 
 
@@ -536,6 +453,7 @@ switch ($task) {
         $secciones = $daoInstrumentos->getSecciones($instrumento);
         $numeroSecciones = count($secciones);
         $seccionActual = 0;
+        $numeroPreguntasP = $daoInstrumentos->getNumeroPreguntasByInstrumento($idInstrumento);
         if (isset($_REQUEST['seccionActual'])) {
             $seccionActual = $_REQUEST['seccionActual'];
         }
@@ -574,14 +492,15 @@ switch ($task) {
                 }
             }
         }
+        $numeroRespuestas = $daoInstrumentos->getNumeroRespuestasByEncuesta($idEncuesta);
+        $porcentajeEjecucion = ($numeroRespuestas / $numeroPreguntasP) * 100;
         if ($seccionActual == count($secciones)) {
-            $ejeData->completarEncuesta($idEncuesta);
+            if ($porcentajeEjecucion >= 100) {
+                $ejeData->completarEncuesta($idEncuesta);
+            }
             echo $html->generaAviso(EJECUCION_MNS_AGREGACION, "?mod=" . $modulo . "&niv=" . $niv . "&task=list&id_element=" . $idPlaneacion . "&ref=$ref");
         } else {
             $preguntas = $daoInstrumentos->getPreguntas($secciones[$seccionActual]);
-            $numeroPreguntas = $daoInstrumentos->getNumeroPreguntasByInstrumento($idInstrumento);
-            $numeroRespuestas = $daoInstrumentos->getNumeroRespuestasByEncuesta($idEncuesta);
-            $porcentajeEjecucion = ($numeroRespuestas / $numeroPreguntas) * 100;
             $style = "progress-bar-success";
             if ($porcentajeEjecucion <= 25) {
                 $style = "progress-bar-danger";
@@ -680,7 +599,7 @@ switch ($task) {
                                         $tipo = split(',', $pregunta->getDescripcion())[0];
                                         if ($tipo == '6' && $respuesta->getRespuesta() != NULL) {
                                             $input = str_replace("required", "", $input);
-                                            $resultado = "<span class='input-group-addon'><a href='././soportes/soporteEncuestas/" . $idPlaneacion . "/" . $id_add . "/" . $respuesta->getRespuesta() . "'>" . $respuesta->getRespuesta() . "</a></span>";
+                                            $resultado = "<span class='input-group-addon'><a href='././soportes/soporteEncuestas/" . $idPlaneacion . "/" . $idEncuesta . "/" . $respuesta->getRespuesta() . "'>" . $respuesta->getRespuesta() . "</a></span>";
                                             echo $input;
                                             echo $resultado;
                                         } else {

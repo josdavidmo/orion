@@ -73,22 +73,8 @@ class CBitacoraData {
      */
     public function insertBitacora($bitacora) {
         $tabla = "bitacora";
-        $columnas = $this->db->getCampos($tabla);
-        $campos = "idUsuario,idBeneficiario,descripcionActividad,fechaInicio,fechaFin";
-        $valores = "'" . $bitacora->getUsuario() . "','"
-                . $bitacora->getBeneficiario() . "','"
-                . $bitacora->getDescripcionActividad() . "','"
-                . $bitacora->getFechaInicio() . "','"
-                . $bitacora->getFechaFin() . "'";
-        $r = $this->db->insertarRegistro($tabla, $campos, $valores);
-        return $r;
-    }
-    
-    public function insertBitacoraSync($bitacora) {
-        $tabla = "bitacora";
-        $columnas = $this->db->getCampos($tabla);
         $campos = "idBitacora,idUsuario,idBeneficiario,descripcionActividad,fechaInicio,fechaFin";
-        $valores = "'" . $bitacora->getId() . "','"
+        $valores = "'" . $bitacora->getId(). "','"
                 . $bitacora->getUsuario() . "','"
                 . $bitacora->getBeneficiario() . "','"
                 . $bitacora->getDescripcionActividad() . "','"
@@ -146,20 +132,49 @@ class CBitacoraData {
         return $r;
     }
     
-    public function getBitacorasSincronizacion($usuario){
-        $resultado = $this->getBitacorasByUsuario($usuario);
-        $bitacoras = null;
-        for($i =0;$i<count($resultado);$i++){
-            $bitacoras[count($bitacoras)]= new bitacora($resultado[$i]['idBitacora'],$usuario,
-                    $resultado[$i]['beneficiario'],$resultado[$i]['descripcionActividad'],
-                    $resultado[$i]['fechaInicio'],$resultado[$i]['fechaFin']);
+    /**
+     * Sincroniza las bitacoras obtenidas del servidor.
+     * @param type $idUsuario
+     * @return type
+     */
+    public function recibirBitacoras($idUsuario){
+        $r = 'true';
+        require_once "./clases/nusoap-0.9.5/lib/nusoap.php";
+        $cliente = new nusoap_client(DIRECCION_WEB_SERVICE_SINCRONIZACION);
+        $error = $cliente->getError();
+        if ($error) {
+            $r = SERVIDOR_NO_DISPONIBLE;
+        } else {
+            $param = array("idUsuario" => $idUsuario);
+            $result = $cliente->call("getObjetivosBitacora", $param);
+            if ($cliente->fault) {
+                $r = NO_EXISTE_SINCRONIZACION;
+            } else {
+                $error = $cliente->getError();
+                if ($error) {
+                    $r = ERROR_CONEXION;
+                } else {
+                    if ($result != NULL) {
+                        $bitacoras = $result;
+                        foreach ($bitacoras as $bitacora) {
+                            $id = $bitacora[0];
+                            $usuario = $bitacora[1];
+                            $beneficiario = $bitacora[2];
+                            $descripcionActividad = utf8_encode($bitacora[3]);
+                            $fechaInicio = $bitacora[4];
+                            $fechaFin = $bitacora[5];
+                            $bitacora = new CBitacora($id, $usuario, $beneficiario, $descripcionActividad, $fechaInicio, $fechaFin);
+                            $this->insertBitacora($bitacora);
+                        }
+                        $r = count($bitacoras) . " " . SINCRONIZACION_RECIBIDA;
+                    } else {
+                        $r = NO_EXISTE_SINCRONIZACION;
+                    }
+                }
+            }
         }
-        return $bitacoras;
+        return $r;
     }
     
-    public function setSync($tabla,$campo,$valorId,$sync){
-        $condicion = $campo." = '".$valorId."'";
-        $r = $this->db->actualizarRegistro($tabla, array('sync'), array($sync), $condicion);
-    }
 
 }

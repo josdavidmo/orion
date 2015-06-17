@@ -35,6 +35,13 @@ class CComunicadoRespuestaData {
         $r = $this->db->insertarRegistro($tabla, $campos, $valores);
         return $r;
     }
+    
+    public function deleteAsociacion($idDocumento, $idRespuesta){
+        $tabla = "comunicado_respuesta";
+        $predicado = "idDocumento = $idDocumento AND idRespuesta = $idRespuesta";
+        $r = $this->db->borrarRegistro($tabla, $predicado);
+        return $r;
+    }
 
     public function getRespuestasByComunicado($idComunicado) {
         $respuestas = null;

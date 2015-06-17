@@ -1,5 +1,4 @@
 <?php
-
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -32,38 +31,25 @@ class CGeneradorEjecucionData {
         }
     }
 
-    function setSyncEncuesta($id, $valor) {
-        $tabla = "generador_encuesta";
-        $campos = array('enc_sync');
+    function setSyncRespuesta($idPregunta, $idEncuesta, $valor) {
+        $tabla = "respuestas";
+        $campos = array('sync');
         $valores = array($valor);
-        $condicion = " enc_id = " . $id;
+        $condicion = " idPregunta = $idPregunta AND idEncuesta = '$idEncuesta'";
         $r = $this->db->actualizarRegistro($tabla, $campos, $valores, $condicion);
         return $r;
     }
 
-    function getSyncEncuestas($valor) {
+    function getSyncRespuestas() {
         $respuestas = null;
-        $sql = "SELECT enc_id, enc_sync FROM generador_encuesta where enc_sync = $valor";
+        $sql = "SELECT * FROM respuestas WHERE sync LIMIT 30";
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             $cont = 0;
             while ($w = mysql_fetch_array($r)) {
-                $respuestas[$cont]['encuesta'] = $w['enc_id'];
-                $respuestas[$cont]['sync'] = $w['enc_sync'];
-                $cont++;
-            }
-        }
-        return $respuestas;
-    }
-
-    function getSyncPlaneaciones($usuario) {
-        $respuestas = null;
-        $sql = "SELECT pla_id FROM generador_planeacion where usu_id = $usuario";
-        $r = $this->db->ejecutarConsulta($sql);
-        if ($r) {
-            $cont = 0;
-            while ($w = mysql_fetch_array($r)) {
-                $respuestas[$cont] = $w['enc_id'] . "";
+                $respuestas[$cont]['pregunta'] = $w['idPregunta'];
+                $respuestas[$cont]['encuesta'] = $w['idEncuesta'];
+                $respuestas[$cont]['respuesta'] = $w['respuesta'];
                 $cont++;
             }
         }
@@ -79,11 +65,25 @@ class CGeneradorEjecucionData {
             while ($w = mysql_fetch_array($r)) {
                 $respuestas[$cont]['pregunta'] = $w['idPregunta'];
                 $respuestas[$cont]['encuesta'] = $w['idEncuesta'];
-                $respuestas[$cont]['respuesta'] = $this->codificarString($w['respuesta']);
+                $respuestas[$cont]['respuesta'] = $w['respuesta'];
                 $cont++;
             }
         }
         return $respuestas;
+    }
+
+    function getEncuestasCompletas() {
+        $encuestas = NULL;
+        $sql = "SELECT enc_id FROM generador_encuesta WHERE ees_id";
+        $r = $this->db->ejecutarConsulta($sql);
+        if ($r) {
+            $cont = 0;
+            while ($w = mysql_fetch_array($r)) {
+                $encuestas[$cont] = $w['enc_id'];
+                $cont++;
+            }
+        }
+        return $encuestas;
     }
 
     function codificarString($t) {
@@ -156,7 +156,7 @@ class CGeneradorEjecucionData {
                 $planeacion[$cont]['pla_fecha_fin'] = $w['pla_fecha_fin'];
                 $planeacion[$cont]['usu_nombre'] = $w['usuario'];
                 $planeacion[$cont]['estado'] = '<img src=./templates/img/ico/verde.gif> Completo';
-                $ejecutado = ($w['encuestasCompletadas']/$w['encuestas']) * 100;
+                $ejecutado = ($w['encuestasCompletadas'] / $w['encuestas']) * 100;
                 $ejecutado = round($ejecutado, 2);
                 if ($ejecutado != 100) {
                     date_default_timezone_set('America/Bogota');
@@ -194,7 +194,6 @@ class CGeneradorEjecucionData {
                 . "left join encuesta_resultado_inspeccion eri on eri.eri_id = enc.eri_id "
                 . "left join usuario usu on usu.usu_id = enc.usu_id "
                 . "WHERE $criterio";
-        //echo $sql;
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             $cont = 0;
@@ -210,10 +209,10 @@ class CGeneradorEjecucionData {
                 $encuesta[$cont]['motivo_ei'] = $w['enc_motivo_encuesta_incorrecta'];
                 $encuesta[$cont]['estado'] = '<img src=./templates/img/ico/verde.gif> Completado';
                 if ($w['ees_id'] != 1) {
-                    $ejecutado = ($w['respuestas']/$w['preguntas']) * 100;
+                    $ejecutado = ($w['respuestas'] / $w['preguntas']) * 100;
                     $ejecutado = round($ejecutado, 2);
-                    if($ejecutado >= 100){
-                        //$this->completarEncuesta($w['enc_id']);
+                    if ($ejecutado >= 100) {
+                        $this->completarEncuesta($w['enc_id']);
                         $encuesta[$cont]['estado'] = '<img src=./templates/img/ico/verde.gif> Completado';
                     } else {
                         $encuesta[$cont]['estado'] = "<img src=./templates/img/ico/rojo.gif> $ejecutado% Ejecutado";
@@ -231,9 +230,10 @@ class CGeneradorEjecucionData {
      * @param Date $fecha_f fecha final
      * @return Integer 
      */
+
     function getInstrumento($id) {
         $sql = "SELECT p.ins_id FROM generador_planeacion p "
-                . "INNER JOIN generador_encuesta e ON e.pla_id=p.pla_id WHERE e.enc_id = $id";
+                . "INNER JOIN generador_encuesta e ON e.pla_id=p.pla_id WHERE e.enc_id = '$id'";
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             while ($w = mysql_fetch_array($r)) {
@@ -268,10 +268,11 @@ class CGeneradorEjecucionData {
     function getEncuestaById($id) {
         $sql = "select * from generador_encuesta where enc_id = " . $id;
         $r = $this->db->recuperarResultado($this->db->ejecutarConsulta($sql));
-        if ($r)
+        if ($r) {
             return $r;
-        else
+        } else {
             return -1;
+        }
     }
 
     function updateEjecucion($id, $archivo, $fecha, $cc, $mci, $rf, $vi, $ri, $mei, $usuario) {
@@ -312,10 +313,6 @@ class CGeneradorEjecucionData {
             }
         }
         return $opciones;
-    }
-
-    function setSaveRespuestasEncuesta($valores) {
-        
     }
 
     function getCuestionarioCompletoOptions() {
@@ -387,7 +384,7 @@ class CGeneradorEjecucionData {
         $tabla = "generador_encuesta";
         $campos = array('ees_id');
         $valores = array(1);
-        $condicion = "enc_id = " . $enc_id;
+        $condicion = "enc_id = '$enc_id'";
         $r = $this->db->actualizarRegistro($tabla, $campos, $valores, $condicion);
         return $r;
     }
@@ -412,30 +409,70 @@ class CGeneradorEjecucionData {
         return $r;
     }
 
-    function insertEjecucionSync($enc_id, $enc_consecutivo, $pla_id, $usu_id) {
-        $tabla = 'generador_ejecucion';
-        $campos = 'enc_id, enc_consecutivo, pla_id, usu_id';
-        $valores = $enc_id . "," . $enc_consecutivo . "," . $pla_id . "";
-        $r = $this->db->insertarRegistro($tabla, $campos, $valores);
-
+    public function enviarRespuestas() {
+        $r = 'true';
+        $respuestas = $this->getSyncRespuestas();
+        if (count($respuestas) != 0) {
+            require_once "./clases/nusoap-0.9.5/lib/nusoap.php";
+            $cliente = new nusoap_client(DIRECCION_WEB_SERVICE_SINCRONIZACION);
+            $error = $cliente->getError();
+            if ($error) {
+                $r = SERVIDOR_NO_DISPONIBLE;
+            } else {
+                $totalRespuestas = count($respuestas);
+                $exitosas = 0;
+                foreach ($respuestas as $respuesta) {
+                    $param = array("idPregunta" => $respuesta['pregunta'],
+                        "idEncuesta" => $respuesta['encuesta'],
+                        "respuesta" => utf8_decode($respuesta['respuesta']));
+                    $result = $cliente->call("insertarRespuesta", $param);
+                    if ($cliente->fault) {
+                        $r = NO_EXISTE_SINCRONIZACION;
+                    } else {
+                        $error = $cliente->getError();
+                        if ($error) {
+                            $r = ERROR_CONEXION;
+                        } else {
+                            if ($result) {
+                                $exitosas++;
+                                $this->setSyncRespuesta($respuesta['pregunta'], $respuesta['encuesta'], 0);
+                                $porcentaje = (($exitosas*100)/$totalRespuestas);
+                                ?>
+                                <script>
+                                    actualizar();
+                                </script>
+                                <?php
+                            }
+                        }
+                    }
+                }
+                if (($exitosas / $totalRespuestas) == 1) {
+                    $r = $totalRespuestas . " " . SINCRONIZACION_RECIBIDA;
+                } else {
+                    $r = SINCRONIZACION_INCOMPLETA;
+                }
+            }
+        } else {
+            $r = NO_SINCRONIZAR;
+        }
         return $r;
     }
-    
+
     public function getResumenPlaneacion($criterio = "1") {
         $resumen = NULL;
         $sql = "SELECT i.idInstrumento,"
                 . "CONCAT(i.codigo,' ',i.nombre) as instrumento, "
                 . "(SELECT SUM(p.pla_numero_encuestas) "
-                 . "FROM generador_planeacion p "
-                 . "WHERE p.ins_id = i.idInstrumento) as encuestas, "
+                . "FROM generador_planeacion p "
+                . "WHERE p.ins_id = i.idInstrumento) as encuestas, "
                 . "(SELECT COUNT(e.enc_id) "
-                 . "FROM generador_encuesta e "
-                 . "INNER JOIN generador_planeacion p ON p.pla_id = e.pla_id "
+                . "FROM generador_encuesta e "
+                . "INNER JOIN generador_planeacion p ON p.pla_id = e.pla_id "
                 . "WHERE p.ins_id = i.idInstrumento AND e.ees_id) as ejecutado "
                 . "FROM instrumentos i "
                 . "WHERE (SELECT SUM(p.pla_numero_encuestas) "
-                       . "FROM generador_planeacion p "
-                       . "WHERE p.ins_id = i.idInstrumento) IS NOT NULL AND "
+                . "FROM generador_planeacion p "
+                . "WHERE p.ins_id = i.idInstrumento) IS NOT NULL AND "
                 . "$criterio";
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
@@ -445,10 +482,10 @@ class CGeneradorEjecucionData {
                 $resumen[$cont]['instrumento'] = $w['instrumento'];
                 $resumen[$cont]['encuestas'] = $w['encuestas'];
                 $resumen[$cont]['ejecutado'] = $w['ejecutado'];
-                $porcentaje = $w['ejecutado']/$w['encuestas']*100;
+                $porcentaje = $w['ejecutado'] / $w['encuestas'] * 100;
                 $porcentaje = round($porcentaje, 2);
                 $resumen[$cont]['porcentaje'] = "<img src=./templates/img/ico/verde.gif> 100%";
-                if(50 < $porcentaje  && $porcentaje <= 99.99){
+                if (50 < $porcentaje && $porcentaje <= 99.99) {
                     $resumen[$cont]['porcentaje'] = "<img src=./templates/img/ico/amarillo.gif> $porcentaje%";
                 } else if ($porcentaje <= 50) {
                     $resumen[$cont]['porcentaje'] = "<img src=./templates/img/ico/rojo.gif> $porcentaje%";

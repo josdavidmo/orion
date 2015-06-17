@@ -21,6 +21,7 @@ defined('_VALID_PRY') or die('Restricted access');
 $daoUsuarios = new CUserData($db);
 $daoAutocontrol = new CPlaneacionAutocontrolData($db);
 $daoBasicas = new CBasicaData($db);
+$daoBasica = new CBasicaRelacionadaData($db);
 $task = $_REQUEST['task'];
 $modulo = $_REQUEST['mod'];
 $niv = $_REQUEST['niv'];
@@ -42,11 +43,11 @@ switch ($task) {
         $form->writeForm();
         $dt = new CHtmlDataTable();
         $dt->setTitleTable(TITULO_PLANEACION_AUTOCONTROL_PERSONAL . " " . $usuario['usu_nombre'] . " " . $usuario['usu_apellido']);
-        $titulos = array(AUTOCONTROL_OBJETIVOS, AUTOCONTROL_RESPONSABLE_PNC);
+        $titulos = array(AUTOCONTROL_OBJETIVOS, AUTOCONTROL_RESPONSABLE_PNC, AUTOCONTROL_RESPONSABLE);
         $bitacoras = $daoAutocontrol->getPlaneacionAutocontrolByResponsablePNC($id_usuario);
         $dt->setTitleRow($titulos);
         $dt->setDataRows($bitacoras);
-        $dt->setSeeLink("?mod=" . $modulo . "&niv=" . $niv . "&task=see");
+        $dt->setSeeLink("?mod=" . $modulo . "&niv=" . $niv . "&task=seeAutocontrol");
         $dt->setType(1);
         $pag_crit = "";
         $dt->setPag(1, $pag_crit);
@@ -69,25 +70,54 @@ switch ($task) {
         $dt->setPag(1, $pag_crit);
         $dt->writeDataTable($niv);
         break;
-
-    case 'see':
-        $id_element = $_REQUEST['id_element'];
+    
+    /**
+     * la variable seeAutocontrol, permite hacer la carga la página con la 
+     * lista de objetos autocontrol según los parámetros de entrada
+     */
+    case 'seeAutocontrol':
+        $idAutocontrol = $_REQUEST['id_element'];
         $form = new CHtmlForm();
-        $form->setTitle(TITULO_AUTOCONTROL_OBSERVACIONES);
+        $form->setTitle(TITULO_DETALLE_AUTOCONTROL);
         $form->setMethod('post');
         $form->setOptions('autoClean', false);
         $form->setAction('?mod=' . $modulo . '&niv=' . $niv);
         $form->addInputButton('submit', 'ok', 'ok', BTN_ATRAS, 'button', '');
         $form->writeForm();
+
+        $dt = new CHtmlDataTable();
+        $dt->setTitleTable(AUTOCONTROL_ACTIVIDADES);
+        $titulos = array(DESCRIPCION_DETALLE_AUTOCONTROL);
+        $condicion = "idPlaneacionAutocontrol = " . $idAutocontrol;
+        $datos = $daoBasica->getBasicas('actividadescontrol', $condicion);
+        $dt->setTitleRow($titulos);
+        $dt->setDataRows($datos);
+        $dt->setSeeLink("?mod=" . $modulo . "&niv=" . $niv . "&task=seeActividad&idAutocontrol=" . $idAutocontrol);
+        $dt->setType(1);
+        $pag_crit = "";
+        $dt->setPag(1, $pag_crit);
+        $dt->writeDataTable($niv);
+        break;
+    
+    case 'seeActividad':
+        $idAutocontrol = $_REQUEST['idAutocontrol'];
+        $id_element = $_REQUEST['id_element'];
+        $form = new CHtmlForm();
+        $form->setTitle(TITULO_AUTOCONTROL_OBSERVACIONES);
+        $form->setMethod('post');
+        $form->setOptions('autoClean', false);
+        $form->setAction('?mod=' . $modulo . '&niv=' . $niv . '&task=seeAutocontrol&id_element=' . $idAutocontrol);
+        $form->addInputButton('submit', 'ok', 'ok', BTN_ATRAS, 'button', '');
+        $form->writeForm();
         $dt = new CHtmlDataTable();
         $dt->setTitleTable(TITULO_AUTOCONTROL_OBSERVACIONES);
         $titulos = array(AUTOCONTROL_OBSERVACIONES_PERIODO, AUTOCONTROL_OBSERVACIONES_DESCRIPCION, AUTOCONTROL_OBSERVACIONES_ESTADO);
-        $observaciones = $daoAutocontrol->getObservacionesByIdAutocontrol($id_element);
+        $observaciones = $daoAutocontrol->getObservacionesByIdActividad($id_element);
         $dt->setTitleRow($titulos);
         $dt->setDataRows($observaciones);
-        $dt->setEditLink("?mod=" . $modulo . "&niv=" . $niv . "&task=edit" . "&id=" . $id_element . "&from=see");
-        $dt->setDeleteLink("?mod=" . $modulo . "&niv=" . $niv . "&task=delete" . "&id=" . $id_element . "&from=see");
-        $dt->setAddLink("?mod=" . $modulo . "&niv=" . $niv . "&task=add" . "&id=" . $id_element . "&from=see");
+        $dt->setEditLink("?mod=" . $modulo . "&niv=" . $niv . "&task=edit" . "&id=" . $id_element . "&from=seeActividad&idAutocontrol=$idAutocontrol");
+        $dt->setDeleteLink("?mod=" . $modulo . "&niv=" . $niv . "&task=delete" . "&id=" . $id_element . "&from=seeActividad&idAutocontrol=$idAutocontrol");
+        $dt->setAddLink("?mod=" . $modulo . "&niv=" . $niv . "&task=add" . "&id=" . $id_element . "&from=seeActividad&idAutocontrol=$idAutocontrol");
         $dt->setType(1);
         $pag_crit = "";
         $dt->setPag(1, $pag_crit);
@@ -124,12 +154,13 @@ switch ($task) {
      * que componen el objeto autocontrol @see \CPlaneacionAutocontrol
      */
     case 'add':
+        $idAutocontrol = $_REQUEST['idAutocontrol'];
         $from = $_REQUEST['from'];
         $id = $_REQUEST['id'];
         $form = new CHtmlForm();
         $form->setTitle(TITULO_AGREGAR_AUTOCONTROL_OBSERVACION);
         $form->setId('frm_add_observacion');
-        $form->setAction('?mod=' . $modulo . '&niv=1&task=saveAdd&id=' . $id . '&from=' . $from);
+        $form->setAction('?mod=' . $modulo . '&niv=1&task=saveAdd&id=' . $id . '&from=' . $from . '&idAutocontrol=' . $idAutocontrol);
         $form->setMethod('post');
         $form->setClassEtiquetas('td_label');
         $form->setTableId('frm_add_autocontrol');
@@ -166,16 +197,18 @@ switch ($task) {
         $from = $_REQUEST['from'];
         $periodo = $_REQUEST['txt_periodo'] . '-00';
         $descripcion = $_REQUEST['txt_descripcion'];
-        $autocontrol = null;
+        $actividad = null;
         $control = null;
-        if ($from == 'see') {
-            $autocontrol = $_REQUEST['id'];
+        $autocontrol = null;
+        if ($from == 'seeActividad') {
+            $autocontrol = $_REQUEST['idAutocontrol'];
+            $actividad = $_REQUEST['id'];
         } else {
             $control = $_REQUEST['id'];
         }
         $estado = $_REQUEST['sel_estado'];
 
-        $observacion = new CObservaciones(null, $periodo, $descripcion, $autocontrol, $estado, $control);
+        $observacion = new CObservaciones(null, $periodo, $descripcion, $actividad, $estado, $control);
 
         $r = $daoAutocontrol->insertObservacion($observacion);
         $m = ERROR_AGREGAR_AUTOCONTROL_OBSERVACIONES;
@@ -185,7 +218,7 @@ switch ($task) {
         if ($autocontrol == null) {
             echo $html->generaAviso($m, "?mod=" . $modulo . "&niv=1&task=" . $from . "&id_element=" . $control);
         } else {
-            echo $html->generaAviso($m, "?mod=" . $modulo . "&niv=1&task=" . $from . "&id_element=" . $autocontrol);
+            echo $html->generaAviso($m, "?mod=" . $modulo . "&niv=1&task=" . $from . "&id_element=" . $actividad . "&idAutocontrol=" . $autocontrol);
         }
         break;
     /**
@@ -196,7 +229,8 @@ switch ($task) {
         $from = $_REQUEST['from'];
         $id_delete = $_REQUEST['id_element'];
         $idAutocontrol = $_REQUEST['id'];
-        echo $html->generaAdvertencia(CONFIRMAR_BORRAR_AUTOCONTROL_OBSERVACIONES, '?mod=' . $modulo . '&niv=1&task=confirmDelete&id_element=' . $id_delete . '&id=' . $idAutocontrol . '&from=' . $from, 'onclick=location.href=\'?mod=' . $modulo . '&niv=1&id_element=' . $idAutocontrol . '&task=' . $from . '\'');
+        $autocontrol = $_REQUEST['idAutocontrol'];
+        echo $html->generaAdvertencia(CONFIRMAR_BORRAR_AUTOCONTROL_OBSERVACIONES, '?mod=' . $modulo . '&niv=1&task=confirmDelete&id_element=' . $id_delete . '&id=' . $idAutocontrol . '&from=' . $from . "&idAutocontrol=" .$autocontrol, 'onclick=location.href=\'?mod=' . $modulo . '&niv=1&id_element=' . $idAutocontrol . '&task=' . $from . '&idAutocontrol=' . $autocontrol . '\'');
         break;
 
     /**
@@ -204,6 +238,7 @@ switch ($task) {
      * de la base de datos @see \CPlaneacionAutocontrol
      */
     case 'confirmDelete':
+        $autocontrol = $_REQUEST['idAutocontrol'];
         $from = $_REQUEST['from'];
         $idAutocontrol = $_REQUEST['id'];
         $id_delete = $_REQUEST['id_element'];
@@ -212,7 +247,7 @@ switch ($task) {
         if ($r == 'true') {
             $m = EXITO_BORRAR_AUTOCONTROL_OBSERVACIONES;
         }
-        echo $html->generaAviso($m, "?mod=" . $modulo . "&niv=1&task=" . $from . "&id_element=" . $idAutocontrol);
+        echo $html->generaAviso($m, "?mod=" . $modulo . "&niv=1&task=" . $from . "&id_element=" . $idAutocontrol . "&idAutocontrol=" . $autocontrol);
         break;
 
     /**
@@ -220,6 +255,7 @@ switch ($task) {
      * confirmacion de edicion @see \CPlaneacionAutocontrol
      */
     case 'edit':
+        $autocontrol = $_REQUEST['idAutocontrol'];
         $from = $_REQUEST['from'];
         $id = $_REQUEST['id'];
         $id_edit = $_REQUEST['id_element'];
@@ -228,7 +264,7 @@ switch ($task) {
         $form = new CHtmlForm();
         $form->setTitle(TITULO_EDITAR_AUTOCONTROL_OBSERVACION);
         $form->setId('frm_edit_observacion');
-        $form->setAction('?mod=' . $modulo . '&niv=1&task=saveEdit&id=' . $id . '&id_edit=' . $id_edit . '&from=' . $from);
+        $form->setAction('?mod=' . $modulo . '&niv=1&task=saveEdit&id=' . $id . '&id_edit=' . $id_edit . '&from=' . $from . '&idAutocontrol=' . $autocontrol);
         $form->setMethod('post');
         $form->setClassEtiquetas('td_label');
         $form->setTableId('frm_add_autocontrol');
@@ -262,6 +298,7 @@ switch ($task) {
      * de datos @see \CPlaneacionAutocontrolData
      */
     case 'saveEdit':
+        $idAutocontrol = $_REQUEST['idAutocontrol'];
         $from = $_REQUEST['from'];
         $id = $_REQUEST['id_edit'];
         $periodo = $_REQUEST['txt_periodo'] . '-00';
@@ -269,14 +306,14 @@ switch ($task) {
         $autocontrol = $_REQUEST['id'];
         $estado = $_REQUEST['sel_estado'];
 
-        $observacion = new CObservaciones($id, $periodo, $descripcion, $autocontrol, $estado, null);
+        $observacion = new CObservaciones($id, $periodo, $descripcion, null, $estado, null);
 
         $r = $daoAutocontrol->updateObservacion($observacion);
         $m = ERROR_EDITAR_AUTOCONTROL_OBSERVACIONES;
         if ($r == 'true') {
             $m = EXITO_EDITAR_AUTOCONTROL_OBSERVACIONES;
         }
-        echo $html->generaAviso($m, "?mod=" . $modulo . "&niv=1&task=" . $from . "&id_element=" . $autocontrol);
+        echo $html->generaAviso($m, "?mod=" . $modulo . "&niv=1&task=" . $from . "&id_element=" . $autocontrol . "&idAutocontrol=" . $idAutocontrol);
         break;
 
     /**

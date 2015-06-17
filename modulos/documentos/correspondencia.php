@@ -1108,10 +1108,35 @@ switch ($task) {
         $dt->setTitleTable(TABLA_CORRESPONDENCIA);
         $dt->setTitleRow($titulos);
         $dt->setDataRows($respuestas);
+        $dt->setDeleteLink("?mod=" . $modulo . "&niv=" . $niv . "&task=deleteAsociacion&idSee=$id_element");
         $dt->setType(1);
         $pag_crit = "";
         $dt->setPag(1, $pag_crit);
         $dt->writeDataTable($niv);
+        break;
+    
+    /**
+     * la variable delete, permite hacer la carga del objeto beneficiario 
+     * y espera confirmacion de eliminarlo @see \CBeneficiario
+     */
+    case 'deleteAsociacion':
+        $idSee = $_REQUEST['idSee'];
+        $id_delete = $_REQUEST['id_element'];
+        echo $html->generaAdvertencia(CONFIRMAR_BORRAR_CORRESPONDENCIA_ASOCIACION, '?mod=' . $modulo . '&niv=1&task=confirmDeleteAsociacion&id_element=' . $id_delete . "&idSee=" . $idSee, 'onclick=location.href=\'?mod=' . $modulo . '&niv=1&id_element=' . $idSee . '&task=see\'');
+        break;
+    /**
+     * la variable confirmDelete, permite eliminar el objeto beneficiario de la 
+     * base de datos @see \CBeneficiario
+     */
+    case 'confirmDeleteAsociacion':
+        $idSee = $_REQUEST['idSee'];
+        $id_delete = $_REQUEST['id_element'];
+        $r = $daoRespuesta->deleteAsociacion($idSee,$id_delete);
+        $m = ERROR_BORRAR_CORRESPONDENCIA_ASOCIACION;
+        if ($r == 'true') {
+            $m = EXITO_BORRAR_CORRESPONDENCIA_ASOCIACION;
+        }
+        echo $html->generaAviso($m, "?mod=" . $modulo . "&niv=1&task=see&id_element=" . $idSee);
         break;
 
     //-----------------------------------------------------------------------------

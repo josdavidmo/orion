@@ -34,7 +34,7 @@ $fechaCantidad = $daoControl->getFechaAndCantidad();
 $fechaInicio = $fechaCantidad['fechaMinima'];
 $periodo = explode("-", $fechaInicio);
 $cantidad = (int) $fechaCantidad['meses'];
-$ancho = $cantidad*2 + 8;
+$ancho = $cantidad*2 + 7;
 
 echo "<table width='80%' border='1' align='center'>";
 //encabezado

@@ -348,9 +348,9 @@ switch ($task) {
             }
         }
 
-		$form->addEtiqueta(OBSERVACION_BENEFICIARIO);
+        $form->addEtiqueta(OBSERVACION_BENEFICIARIO);
         $form->addTextArea('textarea', 'txt_observaciones', 'txt_observaciones', 100, 5, '', '', ' title="' . $html->traducirTildes(TITLE_ALFANUMERICO) . '"');
-		
+
         $form->addEtiqueta(DDA_BENEFICIARIO);
         $form->addSelect('select', 'sel_dda', 'sel_dda', $opciones, '', '', '', ' required');
 
@@ -424,7 +424,7 @@ switch ($task) {
         $fechaInicio = $_REQUEST['txt_fecha_inicio'];
         $meta = $_REQUEST['sel_meta'];
         $estado = $_REQUEST['sel_estado'];
-		$observaciones = $_REQUEST ['txt_observaciones'];
+        $observaciones = $_REQUEST ['txt_observaciones'];
         $dda = $_REQUEST['sel_dda'];
         $grupo = $_REQUEST['sel_grupo'];
         $tipo = $_REQUEST['sel_tipo'];
@@ -578,9 +578,9 @@ switch ($task) {
             }
         }
 
-		$form->addEtiqueta(OBSERVACION_BENEFICIARIO);
+        $form->addEtiqueta(OBSERVACION_BENEFICIARIO);
         $form->addTextArea('textarea', 'txt_observaciones', 'txt_observaciones', 100, 5, $beneficiario->getObservaciones(), '', ' title="' . $html->traducirTildes(TITLE_ALFANUMERICO) . '"');
-		
+
         $form->addEtiqueta(DDA_BENEFICIARIO);
         $form->addSelect('select', 'sel_dda', 'sel_dda', $opciones, '', $beneficiario->getDda(), '', ' required');
 
@@ -656,7 +656,7 @@ switch ($task) {
         $fechaInicio = $_REQUEST['txt_fecha_inicio'];
         $meta = $_REQUEST['sel_meta'];
         $estado = $_REQUEST['sel_estado'];
-		$observaciones = $_REQUEST['txt_observaciones'];
+        $observaciones = $_REQUEST['txt_observaciones'];
         $dda = $_REQUEST['sel_dda'];
         $grupo = $_REQUEST['sel_grupo'];
         $tipo = $_REQUEST['sel_tipo'];

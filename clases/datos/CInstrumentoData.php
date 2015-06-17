@@ -498,13 +498,13 @@ class CInstrumentoData {
      * @return type
      */
     public function insertRespuesta($respuesta) {
-        $r = $this->deleteRespuesta($respuesta);
         $tabla = 'respuestas';
         $campos = 'idPregunta, idEncuesta, respuesta';
         $valores = "'" . $respuesta->getIdPregunta() . "','"
                 . "" . $respuesta->getIdEncuesta() . "','"
                 . "" . $respuesta->getRespuesta() . "'";
-        $r = $r && $this->db->insertarRegistro($tabla, $campos, $valores);
+        $query = "REPLACE INTO $tabla ($campos) VALUES ($valores)";
+        $r = $this->db->ejecutarConsulta($query);
         return $r;
     }
 
@@ -515,8 +515,8 @@ class CInstrumentoData {
      * @return \CRespuesta
      */
     public function getRespuestaByIdPreguntaAndIdEncuesta($idEncuesta, $idPregunta) {
-        $sql = "SELECT * FROM respuestas WHERE idPregunta = "
-                . $idPregunta . " AND idEncuesta = " . $idEncuesta;
+        $sql = "SELECT * FROM respuestas WHERE idPregunta = $idPregunta"
+                . " AND idEncuesta = '$idEncuesta'";
         $respuesta = new CRespuesta(null, null, null);
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
@@ -532,7 +532,7 @@ class CInstrumentoData {
      * @return type
      */
     public function getNumeroRespuestasByEncuesta($idEncuesta) {
-        $sql = "SELECT COUNT(*) FROM respuestas WHERE idEncuesta = " . $idEncuesta;
+        $sql = "SELECT COUNT(*) FROM respuestas WHERE idEncuesta = '$idEncuesta'";
         $r = $this->db->ejecutarConsulta($sql);
         $numero = 0;
         if ($r) {

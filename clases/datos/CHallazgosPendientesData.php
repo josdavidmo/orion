@@ -37,9 +37,11 @@ class CHallazgosPendientesData {
         $hallazgosPendientes = null;
         $sql = "SELECT CONCAT(re.der_nombre,'-',de.dep_nombre,'-',mu.mun_nombre,'-',c.nombre,' ',be.nombre,' (',t.descripcionTipoBeneficiario,')') as beneficiario, "
                 . "CONCAT(ar.descripcion,' ',ti.descripcionTipoHallazgo) as clasificacion, "
+                . "ch.descripcionClasificacionHallazgo as tipo, "
                 . "CONCAT(usu_nombre,' ',usu_apellido) as usuario, a.idActividad, "
                 . "DATE_FORMAT(a.fecha, '%Y-%m-%d') as fecha, h.* "
                 . "FROM hallazgospendientes h "
+                . "INNER JOIN clasificacionhallazgo ch ON ch.idClasificacionHallazgo = h.idClasificacion "
                 . "INNER JOIN tipohallazgo ti ON ti.idTipoHallazgo = h.idTipo "
                 . "INNER JOIN areashallazgospendientes ar ON ti.idAreaHallazgo = ar.idAreaHallazgo "
                 . "INNER JOIN actividad a ON a.idActividad = h.idActividad "
@@ -64,6 +66,7 @@ class CHallazgosPendientesData {
                 $hallazgosPendientes[$cont]['idHallazgosPendientes'] = $w['idHallazgosPendientes'];
                 $hallazgosPendientes[$cont]['beneficiario'] = $w['beneficiario'];
                 $hallazgosPendientes[$cont]['clasificacion'] = $w['clasificacion'];
+                $hallazgosPendientes[$cont]['tipo'] = $w['tipo'];
                 $hallazgosPendientes[$cont]['usuario'] = $w['usuario'];
                 $hallazgosPendientes[$cont]['fechaInicio'] = $w['fecha'];
                 $hallazgosPendientes[$cont]['observacion'] = $w['observacion'];
@@ -91,11 +94,13 @@ class CHallazgosPendientesData {
         $sql = "SELECT re.der_nombre as region, de.dep_nombre as departamento, "
                 . "mu.mun_nombre as municipio, c.nombre as centroPoblado, "
                 . "be.nombre as beneficiario, t.descripcionTipoBeneficiario as tipoBeneficiario, "
+                . "ch.descripcionClasificacionHallazgo as tipo, "
                 . "CONCAT(usu_nombre,' ',usu_apellido) as usuario, "
                 . "DATE_FORMAT(a.fecha, '%Y-%m-%d') as fecha, a.descripcionActividadEjecutada as actividad, "
                 . "ar.descripcion as area, ti.descripcionTipoHallazgo as clasificacion, "
                 . "h.* "
                 . "FROM hallazgospendientes h "
+                . "INNER JOIN clasificacionhallazgo ch ON ch.idClasificacionHallazgo = h.idClasificacion "
                 . "INNER JOIN tipohallazgo ti ON ti.idTipoHallazgo = h.idTipo "
                 . "INNER JOIN areashallazgospendientes ar ON ti.idAreaHallazgo = ar.idAreaHallazgo "
                 . "INNER JOIN actividad a ON a.idActividad = h.idActividad "
@@ -121,6 +126,7 @@ class CHallazgosPendientesData {
                 $hallazgosPendientes[$cont]['tipoBeneficiario'] = $w['tipoBeneficiario'];
                 $hallazgosPendientes[$cont]['area'] = $w['area'];
                 $hallazgosPendientes[$cont]['clasificacion'] = $w['clasificacion'];
+                $hallazgosPendientes[$cont]['tipo'] = $w['tipo'];
                 $hallazgosPendientes[$cont]['usuario'] = $w['usuario'];
                 $hallazgosPendientes[$cont]['fechaInicio'] = $w['fecha'];
                 $hallazgosPendientes[$cont]['actividad'] = $w['actividad'];
@@ -152,9 +158,42 @@ class CHallazgosPendientesData {
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             $w = mysql_fetch_array($r);
-            $hallazgoPendiente = new CHallazgosPendientes($w['idHallazgosPendientes'], $w['observacion'], $w['idTipo'], $w['idActividad'], $w['archivo'], $w['fechaRespuesta'], $w['observacionRespuesta'], $w['archivoRespuesta']);
+            $hallazgoPendiente = new CHallazgosPendientes($w['idHallazgosPendientes'], 
+                                                          $w['observacion'], 
+                                                          $w['idTipo'], 
+                                                          $w['idActividad'], 
+                                                          $w['idClasificacion'], 
+                                                          $w['archivo'], 
+                                                          $w['fechaRespuesta'], 
+                                                          $w['observacionRespuesta'], 
+                                                          $w['archivoRespuesta']);
         }
         return $hallazgoPendiente;
+    }
+    
+    public function getHallazgosSincronizar($idUsuario) {
+        $hallazgos = null;
+        $sql = "SELECT * "
+                . "FROM hallazgospendientes h "
+                . "INNER JOIN actividad a ON a.idActividad = h.idActividad "
+                . "INNER JOIN bitacora b ON b.idBitacora = a.idBitacora "
+                . "WHERE h.sync AND b.idUsuario = $idUsuario";
+        $r = $this->db->ejecutarConsulta($sql);
+        if ($r) {
+            $cont = 0;
+            while ($w = mysql_fetch_array($r)) {
+                $hallazgos[$cont]['idHallazgosPendientes'] = $w['idHallazgosPendientes'];
+                $hallazgos[$cont]['observacion'] = $w['observacion'];
+                $hallazgos[$cont]['archivo'] = $w['archivo'];
+                $hallazgos[$cont]['idTipo'] = $w['idTipo'];
+                $hallazgos[$cont]['idActividad'] = $w['idActividad'];
+                $hallazgos[$cont]['fechaRespuesta'] = $w['fechaRespuesta'];
+                $hallazgos[$cont]['observacionRespuesta'] = $w['observacionRespuesta'];
+                $hallazgos[$cont]['archivoRespuesta'] = $w['archivoRespuesta'];
+                $cont++;
+            }
+        }
+        return $hallazgos;
     }
 
     /**
@@ -200,11 +239,12 @@ class CHallazgosPendientesData {
     public function insertHallazgosPendientes($hallazgoPendiente) {
         $tabla = "hallazgospendientes";
         $hallazgoPendiente->setId($this->daoActividad->construirId($hallazgoPendiente->getActividad(), $tabla, 'idHallazgosPendientes'));
-        $campos = "idHallazgosPendientes,observacion,idTipo,idActividad";
+        $campos = "idHallazgosPendientes,observacion,idTipo,idActividad,idClasificacion";
         $valores = "'" . $hallazgoPendiente->getId() . "','"
                 . $hallazgoPendiente->getObservacion() . "','"
                 . $hallazgoPendiente->getTipo() . "','"
-                . $hallazgoPendiente->getActividad() . "'";
+                . $hallazgoPendiente->getActividad() . "','"
+                . $hallazgoPendiente->getClasificacion() . "'";
         if ($hallazgoPendiente->getArchivo()['name'] != null) {
             $actividad = $this->daoActividad->getActividadById($hallazgoPendiente->getActividad());
             $bitacora = $this->daoBitacora->getBitacoraById($actividad->getBitacora());
@@ -228,10 +268,11 @@ class CHallazgosPendientesData {
     public function updateHallazgosPendientes($hallazgoPendiente) {
         $r = 'false';
         $tabla = "hallazgospendientes";
-        $campos = array("observacion", "idTipo", "idActividad","sync");
+        $campos = array("observacion", "idTipo", "idActividad", "idClasificacion", "sync");
         $valores = array("'" . $hallazgoPendiente->getObservacion() . "'",
             "'" . $hallazgoPendiente->getTipo() . "'",
-            "'" . $hallazgoPendiente->getActividad() . "'","1");
+            "'" . $hallazgoPendiente->getActividad() . "'",
+            "'" . $hallazgoPendiente->getClasificacion(). "'", "1");
         if ($hallazgoPendiente->getArchivo()['name'] != null) {
             $daoActividad = new CActividadBitacoraData($this->db);
             $daoBitacora = new CBitacoraData($this->db);
@@ -271,9 +312,9 @@ class CHallazgosPendientesData {
     public function saveRespuestaHallazgosPendientes($hallazgoPendiente) {
         $r = true;
         $tabla = "hallazgospendientes";
-        $campos = array("fechaRespuesta", "observacionRespuesta");
+        $campos = array("fechaRespuesta", "observacionRespuesta", "sync");
         $valores = array("'" . $hallazgoPendiente->getFechaRespuesta() . "'",
-            "'" . $hallazgoPendiente->getObservacionRespuesta() . "'");
+            "'" . $hallazgoPendiente->getObservacionRespuesta() . "'", "1");
         if ($hallazgoPendiente->getArchivoRespuesta()['name'] != null) {
             $daoActividad = new CActividadBitacoraData($this->db);
             $daoBitacora = new CBitacoraData($this->db);
@@ -292,22 +333,61 @@ class CHallazgosPendientesData {
         return $r;
     }
     
-    function getHallazgosSincronizacion($usuario,$html){
-        $hallazgosPendientes = null;
-        $sql = "SELECT hallazgospendientes.* "
-                . "FROM hallazgospendientes inner join actividad on hallazgospendientes.idActividad = actividad.idActividad "
-                . "inner join bitacora on actividad.idBitacora = bitacora.idBitacora "
-                . "WHERE hallazgospendientes.sync = 1 AND bitacora.idUsuario = " . $usuario;
-        $r = $this->db->ejecutarConsulta($sql);
-        if ($r) {
-            $cont = 0;
-            while ($w = mysql_fetch_array($r)) {
-                $hallazgosPendientes[count($hallazgosPendientes)] = new hallazgo($w['idHallazgosPendientes'], 
-                        $html->traducirTildes($w['observacion']), $w['archivo'], $w['idTipo'], $w['idActividad'],
-                        $w['fechaRespuesta'], $html->traducirTildes($w['observacionRespuesta']), $w['archivoRespuesta']);
+    public function enviarHallazgos($idUsuario) {
+        $r = 'true';
+        $hallazgos = $this->getHallazgosSincronizar($idUsuario);
+        if (count($hallazgos) != 0) {
+            require_once "./clases/nusoap-0.9.5/lib/nusoap.php";
+            $cliente = new nusoap_client(DIRECCION_WEB_SERVICE_SINCRONIZACION);
+            $error = $cliente->getError();
+            if ($error) {
+                $r = SERVIDOR_NO_DISPONIBLE;
+            } else {
+                $totalHallazgos = count($hallazgos);
+                $exitosas = 0;
+                foreach ($hallazgos as $hallazgo) {
+                    $param = array("idHallazgosPendientes" => $hallazgo['idHallazgosPendientes'], 
+                                   "observacion" => utf8_decode($hallazgo['observacion']), 
+                                   "archivo" => $hallazgo['archivo'], 
+                                   "idTipo" => $hallazgo['idTipo'],
+                                   "idActividad" => $hallazgo['idActividad'],
+                                   "fechaRespuesta" => $hallazgo['fechaRespuesta'],
+                                   "observacionRespuesta" => $hallazgo['observacionRespuesta'],
+                                   "archivoRespuesta" => $hallazgo['archivoRespuesta']);
+                    $result = $cliente->call("insertarHallazgo", $param);
+                    if ($cliente->fault) {
+                        $r = NO_EXISTE_SINCRONIZACION;
+                    } else {
+                        $error = $cliente->getError();
+                        if ($error) {
+                            $r = ERROR_CONEXION;
+                        } else {
+                            if ($result) {
+                                $exitosas++;
+                                $this->setSyncHallazgo($hallazgo['idHallazgosPendientes'], 0);
+                            } 
+                        }
+                    }
+                }
+                if (($exitosas / $totalHallazgos) == 1) {
+                    $r = $exitosas . " " . SINCRONIZACION_RECIBIDA;
+                } else {
+                    $r = SINCRONIZACION_INCOMPLETA;
+                }
             }
+        } else {
+            $r = NO_SINCRONIZAR;
         }
-        return $hallazgosPendientes;
+        return $r;
+    }
+
+    function setSyncHallazgo($id, $valor) {
+        $tabla = "hallazgospendientes";
+        $campos = array('sync');
+        $valores = array($valor);
+        $condicion = " idHallazgosPendientes = '$id'";
+        $r = $this->db->actualizarRegistro($tabla, $campos, $valores, $condicion);
+        return $r;
     }
 
 }

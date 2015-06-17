@@ -184,11 +184,11 @@ while ($cont < $conta) {
         <td>" . $html->traducirTildes($ordenes[$cont]['proveedor']) . "</td>
         <td>" . $html->traducirTildes($ordenes[$cont]['numerofactura']) . "</td>
         <td>" . $html->traducirTildes($ordenes[$cont]['moneda']) . "</td>
-        <td>" . $html->traducirTildes($ordenes[$cont]['tasa']) . "</td>
-        <td>" . $html->traducirTildes($ordenes[$cont]['valortotal']) . "</td>
+        <td>" . $html->traducirTildes(number_format($ordenes[$cont]['tasa'], 2, ',', '.')) . "</td>
+        <td>" . $html->traducirTildes(number_format($ordenes[$cont]['valortotal'], 2, ',', '.')) . "</td>
         <td>" . $html->traducirTildes($ordenes[$cont]['fechapago']) . "</td>
         <td>" . $html->traducirTildes($ordenes[$cont]['archivo']) . "</td>
-        <td>" . $html->traducirTildes($ordenes[$cont]['amortizacion']) . "</td>
+        <td>" . $html->traducirTildes(number_format($ordenes[$cont]['amortizacion'], 2, ',', '.')) . "</td>
         <td>" . $html->traducirTildes($ordenes[$cont]['observaciones']) . "</td>";
     echo "</tr>";
     $cont++;

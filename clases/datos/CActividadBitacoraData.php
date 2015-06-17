@@ -29,7 +29,7 @@ class CActividadBitacoraData {
      */
     function getActividadById($idActividad) {
         $actividad = null;
-        $sql = "SELECT * FROM actividad WHERE idActividad = '" . $idActividad."'";
+        $sql = "SELECT * FROM actividad WHERE idActividad = '" . $idActividad . "'";
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             $w = mysql_fetch_array($r);
@@ -71,6 +71,43 @@ class CActividadBitacoraData {
     }
 
     /**
+     * Obtiene las actividades almacenadas en la bitacora de un usuario
+     * @param type $idBitacora
+     * @return type
+     */
+    function getActividadesSincronizar($idUsuario) {
+        $actividades = null;
+        $sql = "SELECT * FROM actividad a "
+                . "INNER JOIN bitacora b ON a.idBitacora = b.idBitacora "
+                . "WHERE a.sync AND b.idUsuario = $idUsuario";
+        $r = $this->db->ejecutarConsulta($sql);
+        if ($r) {
+            $cont = 0;
+            while ($w = mysql_fetch_array($r)) {
+                $actividades[$cont]['idActividad'] = $w['idActividad'];
+                $actividades[$cont]['idBitacora'] = $w['idBitacora'];
+                $actividades[$cont]['fecha'] = $w['fecha'];
+                $actividades[$cont]['fechaFin'] = $w['fechaFin'];
+                $actividades[$cont]['descripcionActividadEjecutada'] = $w['descripcionActividadEjecutada'];
+                $actividades[$cont]['condicionesClimaticas'] = $w['condicionesClimaticas'];
+                $actividades[$cont]['condicionesTopologicas'] = $w['condicionesTopologicas'];
+                $actividades[$cont]['observaciones'] = $w['observaciones'];
+                $actividades[$cont]['idEstadoSalud'] = $w['idEstadoSalud'];
+                $actividades[$cont]['numCuadrillas'] = $w['numCuadrillas'];
+                $actividades[$cont]['totalPersonas'] = $w['totalPersonas'];
+                $actividades[$cont]['totalPersonasContratadas'] = $w['totalPersonasContratadas'];
+                $actividades[$cont]['cumplimientoParafiscales'] = $w['cumplimientoParafiscales'];
+                $actividades[$cont]['cumplimientoSenalizacion'] = $w['cumplimientoSenalizacion'];
+                $actividades[$cont]['cumplimientoEPP'] = $w['cumplimientoEPP'];
+                $actividades[$cont]['cumplimientoCertificaciones'] = $w['cumplimientoCertificaciones'];
+                $actividades[$cont]['estado'] = $w['estado'];
+                $cont++;
+            }
+        }
+        return $actividades;
+    }
+
+    /**
      * Construye el id unico para la tabla seleccionada.
      * @param $idBitacora $actividad.
      * @return string
@@ -82,7 +119,7 @@ class CActividadBitacoraData {
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             $w = mysql_fetch_array($r);
-            $id = $predecesor."_".(str_replace("_","",$w['lastId'])+1);
+            $id = $predecesor . "_" . (str_replace("_", "", $w['lastId']) + 1);
         }
         return $id;
     }
@@ -96,7 +133,6 @@ class CActividadBitacoraData {
         $tabla = "actividad";
         $actividad->setId($this->construirId($actividad->getBitacora(), $tabla, 'idActividad'));
         $columnas = $this->db->getCampos($tabla);
-        unset($columnas[count($columnas) - 1]);
         $campos = "";
         foreach ($columnas as $columna) {
             $campos .= $columna . ",";
@@ -117,7 +153,7 @@ class CActividadBitacoraData {
                 . $actividad->getCumplimientoParafiscales() . ","
                 . $actividad->getCumplimientoSenalizacion() . ","
                 . $actividad->getCumplimientoEpp() . ","
-                . $actividad->getCumplimientoCertificaciones().",'1'";
+                . $actividad->getCumplimientoCertificaciones() . ",'0','1'";
         $r = $this->db->insertarRegistro($tabla, $campos, $valores);
         return $r;
     }
@@ -132,7 +168,6 @@ class CActividadBitacoraData {
         $tabla = "actividad";
         $condicion = "idActividad = '" . $actividad->getId() . "'";
         $campos = $this->db->getCampos($tabla);
-        unset($campos[count($campos) - 1]);
         $valores = array("'" . $actividad->getId() . "'",
             "'" . $actividad->getBitacora() . "'",
             "'" . $actividad->getFecha() . "'",
@@ -148,7 +183,7 @@ class CActividadBitacoraData {
             $actividad->getCumplimientoParafiscales(),
             $actividad->getCumplimientoSenalizacion(),
             $actividad->getCumplimientoEpp(),
-            $actividad->getCumplimientoCertificaciones(),'0');
+            $actividad->getCumplimientoCertificaciones(), '0', '1');
         $r = $this->db->actualizarRegistro($tabla, $campos, $valores, $condicion);
         return $r;
     }
@@ -160,7 +195,7 @@ class CActividadBitacoraData {
      */
     public function deleteActividadById($idActividad) {
         $tabla = "actividad";
-        $predicado = "idActividad = '" . $idActividad. "'";
+        $predicado = "idActividad = '" . $idActividad . "'";
         $r = $this->db->borrarRegistro($tabla, $predicado);
         return $r;
     }
@@ -211,27 +246,70 @@ class CActividadBitacoraData {
         }
     }
 
-    function getActividadesSincronizacion($usuario) {
-        $actividades = null;
-        $sql = "SELECT actividad.* FROM actividad inner join bitacora "
-                . "on actividad.idBitacora = bitacora.idBitacora "
-                . "WHERE actividad.sync = 1 AND bitacora.idUsuario = " . $usuario;
-        $r = $this->db->ejecutarConsulta($sql);
-        if ($r) {
-            $cont = 0;
-            while ($w = mysql_fetch_array($r)) {
-                $actividades[count($actividades)] = new actividad($w['idActividad'], 
-                        $w['idBitacora'], $w['fecha'], $w['fechaFin'], 
-                        $w['descripcionActividadEjecutada'], $w['condicionesTopologicas'], 
-                        $w['condicionesClimaticas'], $w['observaciones'], $w['idEstadoSalud'], 
-                        $w['numCuadrillas'], $w['totalPersonas'], $w['totalPersonasContratadas'], 
-                        $w['cumplimientoParafiscales'], $w['cumplimientoSenalizacion'], 
-                        $w['cumplimientoEPP'], $w['cumplimientoCertificaciones'], $w['estado']);
+    public function enviarActividades($idUsuario) {
+        $r = 'true';
+        $actividades = $this->getActividadesSincronizar($idUsuario);
+        if (count($actividades) != 0) {
+            require_once "./clases/nusoap-0.9.5/lib/nusoap.php";
+            $cliente = new nusoap_client(DIRECCION_WEB_SERVICE_SINCRONIZACION);
+            $error = $cliente->getError();
+            if ($error) {
+                $r = SERVIDOR_NO_DISPONIBLE;
+            } else {
+                $totalActividades = count($actividades);
+                $exitosas = 0;
+                foreach ($actividades as $actividad) {
+                    $param = array("idActividad" => $actividad['idActividad'], 
+                                   "idBitacora" => $actividad['idBitacora'], 
+                                   "fecha" => $actividad['fecha'], 
+                                   "fechaFin" => $actividad['fechaFin'], 
+                                   "descripcionActividadEjecutada" => utf8_decode($actividad['descripcionActividadEjecutada']), 
+                                   "condicionesClimaticas" => utf8_decode($actividad['condicionesClimaticas']), 
+                                   "condicionesTopologicas" => utf8_decode($actividad['condicionesTopologicas']), 
+                                   "observaciones" => utf8_decode($actividad['observaciones']), 
+                                   "idEstadoSalud" => $actividad['idEstadoSalud'], 
+                                   "numCuadrillas" => $actividad['numCuadrillas'], 
+                                   "totalPersonas" => $actividad['totalPersonas'], 
+                                   "totalPersonasContratadas" => $actividad['totalPersonasContratadas'], 
+                                   "cumplimientoParafiscales" => $actividad['cumplimientoParafiscales'], 
+                                   "cumplimientoSenalizacion" => $actividad['cumplimientoSenalizacion'], 
+                                   "cumplimientoEPP" => $actividad['cumplimientoEPP'], 
+                                   "cumplimientoCertificaciones" => $actividad['cumplimientoCertificaciones'], 
+                                   "estado" => $actividad['estado']);
+                    $result = $cliente->call("insertarActividad", $param);
+                    if ($cliente->fault) {
+                        $r = NO_EXISTE_SINCRONIZACION;
+                    } else {
+                        $error = $cliente->getError();
+                        if ($error) {
+                            $r = ERROR_CONEXION;
+                        } else {
+                            if ($result) {
+                                $exitosas++;
+                                $this->setSyncActividad($actividad['idActividad'], 0);
+                            }
+                        }
+                    }
+                }
+                if (($exitosas / $totalActividades) == 1) {
+                    $r = $exitosas . " " . SINCRONIZACION_RECIBIDA;
+                } else {
+                    $r = SINCRONIZACION_INCOMPLETA;
+                }
             }
+        } else {
+            $r = NO_SINCRONIZAR;
         }
-        return $actividades;
+        return $r;
     }
-    
 
-    
+    function setSyncActividad($id, $valor) {
+        $tabla = "actividad";
+        $campos = array('sync');
+        $valores = array($valor);
+        $condicion = " idActividad = '$id'";
+        $r = $this->db->actualizarRegistro($tabla, $campos, $valores, $condicion);
+        return $r;
+    }
+
 }

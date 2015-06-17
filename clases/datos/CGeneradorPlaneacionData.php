@@ -277,23 +277,39 @@ class CGeneradorPlaneacionData {
             }
         }
     }
+    
+    public function construirId($predecesor, $tabla, $columna) {
+        $longitud = strlen($predecesor) + 2;
+        $sql = "SELECT MAX(CAST(substring($columna, $longitud) AS UNSIGNED)) as lastId FROM $tabla WHERE pla_id = '$predecesor'";
+        //echo "<br>Consulta id: $sql<br>";
+        $r = $this->db->ejecutarConsulta($sql);
+        if ($r) {
+            $w = mysql_fetch_array($r);
+            $id = $predecesor . "_" . (str_replace("_", "", $w['lastId']) + 1);
+        }
+        return $id;
+    }
 
-    function insertPlaneacion($beneficiario, $instrumento, $inicio, $fin, $numero, $usuario) {
+    function insertPlaneacion($beneficiario, $instrumento, $inicio, $fin, $numero, $usuario, $pla_id = NULL) {
         $tabla = 'generador_planeacion';
-        $campos = 'pla_id,  ben_id,ins_id,pla_numero_encuestas, '
+        $campos = 'pla_id, ben_id,ins_id,pla_numero_encuestas, '
                 . 'pla_fecha_inicio,pla_fecha_fin, usu_id';
-        $valores = "''," . $beneficiario . "," . $instrumento . ","
+        $valores = "'" . $pla_id . "'," . $beneficiario . "," . $instrumento . ","
                 . $numero . ",'" . $inicio . "','" . $fin . "'," . $usuario . "";
         $r = $this->db->insertarRegistro($tabla, $campos, $valores);
         if ($r == 'true') {
             $tabla = 'generador_encuesta';
             $campos = 'enc_id, enc_consecutivo, pla_id, usu_id';
             $id = $this->getMaxPlaneacion();
+            if($pla_id != NULL){
+                $id = $pla_id;
+            }
             $centro_poblado = $this->getDaneCentroPoblado($id);
             $cons = $this->ultimoConsecutivoEncuesta($centro_poblado);
             $i = 0;
             while ($i < $numero) {
-                $valores = "''," . ($cons + $i + 1) . "," . $id . "," . $usuario . "";
+                $enc_id = $this->construirId($id, $tabla, 'enc_id');
+                $valores = "'$enc_id'," . ($cons + $i + 1) . ",'" . $id . "'," . $usuario . "";
                 $r = $this->db->insertarRegistro($tabla, $campos, $valores);
                 $i++;
             }
@@ -687,6 +703,45 @@ class CGeneradorPlaneacionData {
         $r = $this->db->borrarRegistro('instrumento_respuestas', $predicado);
         return $this->db->borrarRegistro('encuesta', $predicado);
         // 2337 2319
+    }
+
+    public function recibirEncuestas($id_user) {
+        $r = 'true';
+        require_once "./clases/nusoap-0.9.5/lib/nusoap.php";
+        $cliente = new nusoap_client(DIRECCION_WEB_SERVICE_SINCRONIZACION);
+        $error = $cliente->getError();
+        if ($error) {
+            $r = SERVIDOR_NO_DISPONIBLE;
+        } else {
+            $param = array("idUsuario" => $id_user);
+            $result = $cliente->call("getPlaneacionesNuevas", $param);
+            if ($cliente->fault) {
+                $r = NO_EXISTE_SINCRONIZACION;
+            } else {
+                $error = $cliente->getError();
+                if ($error) {
+                    $r = ERROR_CONEXION;
+                } else {
+                    if ($result != NULL) {
+                        $planeaciones = $result;
+                        foreach ($planeaciones as $planeacion) {
+                            $pla_id = $planeacion[0];
+                            $beneficiario = $planeacion[1];
+                            $instrumento = $planeacion[2];
+                            $numero = $planeacion[3];
+                            $inicio = $planeacion[4];
+                            $fin = $planeacion[5];
+                            $usuario = $planeacion[6];
+                            $this->insertPlaneacion($beneficiario, $instrumento, $inicio, $fin, $numero, $usuario, $pla_id);
+                        }
+                        $r = count($planeaciones) . " " . SINCRONIZACION_RECIBIDA;
+                    } else {
+                        $r = NO_EXISTE_SINCRONIZACION;
+                    }
+                }
+            }
+        }
+        return $r;
     }
 
 }

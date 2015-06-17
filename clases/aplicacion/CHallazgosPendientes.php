@@ -18,6 +18,8 @@ class CHallazgosPendientes {
     var $tipo;
     /** Almacena la actividad del Hallazgo Pendiente. */
     var $actividad;
+    /** Almacena la clasificacion del Hallazgo Pendiente. */
+    var $clasificacion;
     /** Almacena el archivo del Hallazgo Pendiente. */
     var $archivo;
     /** Almacena la fecha respuesta del Hallazgo Pendiente. */
@@ -28,31 +30,20 @@ class CHallazgosPendientes {
     var $archivoRespuesta;
     
     
-    /**
-     * Constructor de la clase.
-     * @param type $id
-     * @param type $observacion
-     * @param type $tipo
-     * @param type $actividad
-     * @param type $archivo
-     * @param type $fechaRespuesta
-     * @param type $observacionRespuesta
-     * @param type $archivoRespuesta
-     */
-    function CHallazgosPendientes($id, $observacion, $tipo, $actividad, 
-                                  $archivo, $fechaRespuesta = NULL, 
-                                  $observacionRespuesta = NULL,
-                                  $archivoRespuesta = NULL) {
+    function __construct($id, $observacion, $tipo, $actividad, 
+                         $clasificacion, $archivo, $fechaRespuesta = NULL, 
+                         $observacionRespuesta = NULL, $archivoRespuesta = NULL) {
         $this->id = $id;
         $this->observacion = $observacion;
         $this->tipo = $tipo;
         $this->actividad = $actividad;
+        $this->clasificacion = $clasificacion;
         $this->archivo = $archivo;
         $this->fechaRespuesta = $fechaRespuesta;
         $this->observacionRespuesta = $observacionRespuesta;
         $this->archivoRespuesta = $archivoRespuesta;
     }
-    
+
     function getId() {
         return $this->id;
     }
@@ -61,30 +52,22 @@ class CHallazgosPendientes {
         return $this->observacion;
     }
 
+    function getTipo() {
+        return $this->tipo;
+    }
+
     function getActividad() {
         return $this->actividad;
+    }
+
+    function getClasificacion() {
+        return $this->clasificacion;
     }
 
     function getArchivo() {
         return $this->archivo;
     }
 
-    function setId($id) {
-        $this->id = $id;
-    }
-
-    function setObservacion($observacion) {
-        $this->observacion = $observacion;
-    }
-
-    function setActividad($actividad) {
-        $this->actividad = $actividad;
-    }
-
-    function setArchivo($archivo) {
-        $this->archivo = $archivo;
-    }
-    
     function getFechaRespuesta() {
         return $this->fechaRespuesta;
     }
@@ -95,6 +78,30 @@ class CHallazgosPendientes {
 
     function getArchivoRespuesta() {
         return $this->archivoRespuesta;
+    }
+
+    function setId($id) {
+        $this->id = $id;
+    }
+
+    function setObservacion($observacion) {
+        $this->observacion = $observacion;
+    }
+
+    function setTipo($tipo) {
+        $this->tipo = $tipo;
+    }
+
+    function setActividad($actividad) {
+        $this->actividad = $actividad;
+    }
+
+    function setClasificacion($clasificacion) {
+        $this->clasificacion = $clasificacion;
+    }
+
+    function setArchivo($archivo) {
+        $this->archivo = $archivo;
     }
 
     function setFechaRespuesta($fechaRespuesta) {
@@ -108,13 +115,7 @@ class CHallazgosPendientes {
     function setArchivoRespuesta($archivoRespuesta) {
         $this->archivoRespuesta = $archivoRespuesta;
     }
-    
-    function getTipo() {
-        return $this->tipo;
-    }
 
-    function setTipo($tipo) {
-        $this->tipo = $tipo;
-    }
+
 
 }

@@ -31,14 +31,4 @@ while ($file = readdir($handle)) {
         require_once($dir . $file);
     }
 }
-closedir($handle);
-//cargamos las clases para generacion de charts
-
-require_once './clases/libchart/libchart/classes/libchart.php';
-
-//cargamos las clases para lectura de xls
-require_once './clases/Excel/reader.php';
-
-//cargamos las clases para generar Excel
-require_once './clases/Excel/PHPExcel.php';
 ?>

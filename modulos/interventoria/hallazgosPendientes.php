@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Modulo Hallazgos Pendientes
  * Maneja el modulo bitacora en union con CRelacionTransporteData, 
@@ -37,13 +36,13 @@ switch ($task) {
     case 'list':
         ?>
         <script>
-            function exportHallazgo(){
+            function exportHallazgo() {
                 document.getElementById('form_hallazgos').action = 'modulos/interventoria/hallazgos_en_excel.php';
                 document.getElementById('form_hallazgos').submit();
             }
-            
-            function filtrarHallazgo(){
-                document.getElementById('form_hallazgos').action = '?mod=<?=$modulo?>&niv=<?=$niv?>';
+
+            function filtrarHallazgo() {
+                document.getElementById('form_hallazgos').action = '?mod=<?= $modulo ?>&niv=<?= $niv ?>';
                 document.getElementById('form_hallazgos').submit();
             }
         </script>
@@ -75,13 +74,17 @@ switch ($task) {
                 $_REQUEST['tipohallazgo'] != '-1') {
             $condicion .= " AND ti.idTipoHallazgo = " . $_REQUEST['tipohallazgo'];
         }
-        if(isset($_REQUEST['txt_fecha_inicio']) && 
-                $_REQUEST['txt_fecha_inicio'] != ""){
-            if(isset($_REQUEST['txt_fecha_fin']) &&
-                    $_REQUEST['txt_fecha_fin'] != ""){
-                $condicion .= " AND a.fecha BETWEEN '". $_REQUEST['txt_fecha_inicio']. "' AND '". $_REQUEST['txt_fecha_fin']."'";
+        if (isset($_REQUEST['sel_clasificacion']) &&
+                $_REQUEST['sel_clasificacion'] != '-1') {
+            $condicion .= " AND h.idClasificacion = " . $_REQUEST['sel_clasificacion'];
+        }
+        if (isset($_REQUEST['txt_fecha_inicio']) &&
+                $_REQUEST['txt_fecha_inicio'] != "") {
+            if (isset($_REQUEST['txt_fecha_fin']) &&
+                    $_REQUEST['txt_fecha_fin'] != "") {
+                $condicion .= " AND a.fecha BETWEEN '" . $_REQUEST['txt_fecha_inicio'] . "' AND '" . $_REQUEST['txt_fecha_fin'] . "'";
             } else {
-                $condicion .= " AND a.fecha BETWEEN '". $_REQUEST['txt_fecha_inicio']. "' AND NOW()";
+                $condicion .= " AND a.fecha BETWEEN '" . $_REQUEST['txt_fecha_inicio'] . "' AND NOW()";
             }
         }
 
@@ -163,26 +166,38 @@ switch ($task) {
         $form->addEtiqueta(ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_CLASIFICACION);
         $form->addSelect('select', 'sel_tipo', 'sel_tipo', $opciones, '', $_REQUEST['sel_tipo'], '', 'onChange="filtrarHallazgo();"');
 
+        $tipos = $daoBasicas->getBasicas('clasificacionhallazgo');
+        $opciones = null;
+        if (isset($tipos)) {
+            foreach ($tipos as $tipo) {
+                $opciones[count($opciones)] = array('value' => $tipo->getId(),
+                    'texto' => $tipo->getDescripcion());
+            }
+        }
+
+        $form->addEtiqueta(ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_TIPO);
+        $form->addSelect('select', 'sel_clasificacion', 'sel_clasificacion', $opciones, '', $_REQUEST['sel_clasificacion'], '', 'onChange="filtrarHallazgo();"');
+
         $form->addEtiqueta(HALLAZGOS_FECHA_INICIO);
         $form->addInputDate('date', 'txt_fecha_inicio', 'txt_fecha_inicio', $_REQUEST['txt_fecha_inicio'], '%Y-%m-%d', '16', '16', '', 'pattern="' . PATTERN_FECHA . '" title="' . $html->traducirTildes(TITLE_FECHA) . '"');
-        
+
         $form->addEtiqueta(HALLAZGOS_FECHA_FINAL);
         $form->addInputDate('date', 'txt_fecha_fin', 'txt_fecha_fin', $_REQUEST['txt_fecha_fin'], '%Y-%m-%d', '16', '16', '', 'pattern="' . PATTERN_FECHA . '" title="' . $html->traducirTildes(TITLE_FECHA) . '"');
-        
+
         $form->addInputButton('button', 'export', 'export', BTN_EXPORTAR, 'button', 'onclick="exportHallazgo();"');
         $form->addInputButton('button', 'export', 'export', BTN_ACEPTAR, 'button', 'onclick="filtrarHallazgo();"');
         $form->writeForm();
 
         $dt = new CHtmlDataTable();
         $dt->setTitleTable(TITULO_ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES);
-        $titulos = array(HALLAZGOS_PENDIENTES_BENEFICIARIO, ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_CLASIFICACION, ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_USUARIO, ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_FECHA, ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_OBSERVACION, BITACORA_ACTIVIDAD_GASTO_ARCHIVO, HALLAZGOS_FECHA_RESPUESTA, HALLAZGOS_OBSERVACION_RESPUESTA, HALLAZGOS_ARCHIVO_RESPUESTA, HALLAZGOS_ESTADO);
+        $titulos = array(HALLAZGOS_PENDIENTES_BENEFICIARIO, ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_CLASIFICACION, ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_TIPO, ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_USUARIO, ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_FECHA, ACTIVIDADES_BITACORA_HALLAZGOS_PENDIENTES_OBSERVACION, BITACORA_ACTIVIDAD_GASTO_ARCHIVO, HALLAZGOS_FECHA_RESPUESTA, HALLAZGOS_OBSERVACION_RESPUESTA, HALLAZGOS_ARCHIVO_RESPUESTA, HALLAZGOS_ESTADO);
         $hallazgosPendientes = $daoHallazgosPendientes->getHallazgosPendientes($condicion);
         $dt->setTitleRow($titulos);
         $dt->setDataRows($hallazgosPendientes);
         $dt->setType(1);
         $pag_crit = "";
         $dt->setPag(1, $pag_crit);
-        $otros = array('link' => "?mod=" . $modulo . "&niv=" . $niv . "&task=responder", 'img' => 'marcado.gif', 'alt' => "Completar");
+        $otros = array('link' => "?mod=" . $modulo . "&niv=" . $niv . "&task=responder&sel_region=" . $_REQUEST['sel_region'] . "&sel_departamento=" . $_REQUEST['sel_departamento'] . "&sel_municipios=" . $_REQUEST['sel_municipios'] . "&sel_centro_poblado=" . $_REQUEST['sel_centro_poblado'] . "&sel_area=" . $_REQUEST['sel_area'] . "&sel_tipo=" . $_REQUEST['sel_tipo'] . "&sel_clasificacion=" . $_REQUEST['sel_clasificacion'] . "&txt_fecha_inicio=" . $_REQUEST['txt_fecha_inicio'] . "&txt_fecha_fin=" . $_REQUEST['txt_fecha_fin'], 'img' => 'marcado.gif', 'alt' => "Completar");
         $dt->addOtrosLink($otros);
         $dt->writeDataTable($niv);
         $dt->setType(1);
@@ -199,7 +214,7 @@ switch ($task) {
         $form = new CHtmlForm();
         $form->setTitle(TITULO_CERRAR_HALLAZGO_PENDIENTE);
         $form->setId('frm_cerrar_hallazgo');
-        $form->setAction('?mod=' . $modulo . '&niv=1&task=saveResponder&idHallazgo=' . $idHallazgosPendientes);
+        $form->setAction("?mod=" . $modulo . "&niv=1&task=saveResponder&idHallazgo=" . $idHallazgosPendientes . "&sel_region=" . $_REQUEST['sel_region'] . "&sel_departamento=" . $_REQUEST['sel_departamento'] . "&sel_municipios=" . $_REQUEST['sel_municipios'] . "&sel_centro_poblado=" . $_REQUEST['sel_centro_poblado'] . "&sel_area=" . $_REQUEST['sel_area'] . "&sel_tipo=" . $_REQUEST['sel_tipo'] . "&sel_clasificacion=" . $_REQUEST['sel_clasificacion'] . "&txt_fecha_inicio=" . $_REQUEST['txt_fecha_inicio'] . "&txt_fecha_fin=" . $_REQUEST['txt_fecha_fin']);
         $form->setMethod('post');
         $form->setTableId('tb_add_bitacora');
 
@@ -213,7 +228,7 @@ switch ($task) {
         $form->addInputFile('file', 'file_archivo', 'file_archivo', '25', 'file', '');
 
         $form->addInputButton('submit', 'btn_enviar', 'btn_enviar', BTN_ACEPTAR, 'button', '');
-        $form->addInputButton('button', 'cancel', 'cancel', BTN_CANCELAR, 'button', 'onclick="cancelarAccion(\'frm_cerrar_hallazgo\',\'?mod=' . $modulo . '&niv=' . $niv . '\');"');
+        $form->addInputButton('button', 'cancel', 'cancel', BTN_CANCELAR, 'button', 'onclick="cancelarAccion(\'frm_cerrar_hallazgo\',\'?mod=' . $modulo . '&niv=' . $niv . '&sel_region=' . $_REQUEST['sel_region'] . '&sel_departamento=' . $_REQUEST['sel_departamento'] . '&sel_municipios=' . $_REQUEST['sel_municipios'] . '&sel_centro_poblado=' . $_REQUEST['sel_centro_poblado'] . '&sel_area=' . $_REQUEST['sel_area'] . '&sel_tipo=' . $_REQUEST['sel_tipo'] . '&sel_clasificacion=' . $_REQUEST['sel_clasificacion'] . '&txt_fecha_inicio=' . $_REQUEST['txt_fecha_inicio'] . '&txt_fecha_fin=' . $_REQUEST['txt_fecha_fin'] . '\');"');
 
         $form->writeForm();
         break;
@@ -226,16 +241,16 @@ switch ($task) {
         $fechaRespuesta = $_REQUEST['txt_fecha'];
         $observacionRespuesta = $_REQUEST['txt_observacion'];
         $archivoRespuesta = $_FILES['file_archivo'];
-		$actividad = $daoHallazgosPendientes->getHallazgosPendientesById($idHallazgo)->getActividad();
-		
-        $hallazgo = new CHallazgosPendientes($idHallazgo, NULL, NULL, $actividad, NULL, $fechaRespuesta, $observacionRespuesta, $archivoRespuesta);
-		
+        $actividad = $daoHallazgosPendientes->getHallazgosPendientesById($idHallazgo)->getActividad();
+
+        $hallazgo = new CHallazgosPendientes($idHallazgo, NULL, NULL, $actividad, NULL, NULL, $fechaRespuesta, $observacionRespuesta, $archivoRespuesta);
+
         $r = $daoHallazgosPendientes->saveRespuestaHallazgosPendientes($hallazgo);
         $m = ERROR_CERRAR_HALLAZGO_PENDIENTE;
         if ($r == 'true') {
             $m = EXITO_CERRAR_HALLAZGO_PENDIENTE;
         }
-        echo $html->generaAviso($m, "?mod=" . $modulo . "&niv=1");
+        echo $html->generaAviso($m, "?mod=" . $modulo . "&niv=1" . "&sel_region=" . $_REQUEST['sel_region'] . "&sel_departamento=" . $_REQUEST['sel_departamento'] . "&sel_municipios=" . $_REQUEST['sel_municipios'] . "&sel_centro_poblado=" . $_REQUEST['sel_centro_poblado'] . "&sel_area=" . $_REQUEST['sel_area'] . "&sel_tipo=" . $_REQUEST['sel_tipo'] . "&sel_clasificacion=" . $_REQUEST['sel_clasificacion'] . "&txt_fecha_inicio=" . $_REQUEST['txt_fecha_inicio'] . "&txt_fecha_fin=" . $_REQUEST['txt_fecha_fin']);
         break;
 }
 ?>

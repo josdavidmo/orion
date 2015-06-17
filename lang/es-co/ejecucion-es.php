@@ -60,6 +60,4 @@ define('ENCUESTAS_IMPORTACION_EXITOSA', 'La importación se realizó correctamen
 define('ERROR_ENCUESTAS_IMPORTACION', 'Error al acceder el archivo');
 define('ERROR_ENCUESTAS_RESPUESTAS', 'Error ingresando las respuestas');
 define('ERROR_ENCUESTA_PLA_ID', 'Las encuestas no corresponden');
-define("DIRECCION_WEB_SERVICE_SINCRONIZACION","http://service.sisinfoits.com:8080/sincronizacionpncav/sincronizacionpncav?wsdl");
-define('BTN_SINCRONIZAR',"Sincronización general");
 ?>

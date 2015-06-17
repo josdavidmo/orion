@@ -4,39 +4,13 @@ function obtenerInformacion($identificador) {
     $datos = null;
     switch ($identificador) {
         case 0:
-            $datos['nombreTabla'] = AUTOCONTROL_ACTIVIDADES;
-            $datos['tabla'] = "actividadescontrol";
-            break;
-
-        case 1:
-            $datos['nombreTabla'] = AUTOCONTROL_CONTROL;
-            $datos['tabla'] = "control";
-            break;
-
-        case 2:
-            $datos['nombreTabla'] = AUTOCONTROL_CRITERIOS_ACEPTACION;
-            $datos['tabla'] = "criteriosaceptacion";
-            break;
-
-        case 3:
-            $datos['nombreTabla'] = AUTOCONTROL_FRECUENCIA;
-            $datos['tabla'] = "frecuencia";
-            break;
-
-        case 4:
             $datos['nombreTabla'] = AUTOCONTROL_FUENTE_DATOS;
             $datos['tabla'] = "fuentedatos";
             break;
 
-        case 5:
+        case 1:
             $datos['nombreTabla'] = AUTOCONTROL_REGISTRO;
             $datos['tabla'] = "registro";
-            break;
-
-        case 6:
-            $datos['nombreTabla'] = AUTOCONTROL_PRODUCTO_NO_CONFORME;
-            $datos['tabla'] = "productonoconforme";
-            break;
     }
     return $datos;
 }
@@ -111,9 +85,9 @@ switch ($task) {
         $form->addInputText('text', 'txt_nombre', 'txt_nombre', '19', '19', $nombre, '', ' pattern="' . PATTERN_ALFANUMERICO . '" title="' . $html->traducirTildes(TITLE_ALFANUMERICO) . '"');
         $form->addInputButton('submit', 'btn_enviar', 'btn_enviar', BTN_ACEPTAR, 'button', '');
         $form->addInputButton('button', 'exportC', 'exportC', BTN_EXPORTAR_CONTROL, 'button', 'onclick=location.href=\'modulos/interventoria/control_excel.php\'');
-        $form->addInputButton('button', 'exportA', 'exportA', BTN_EXPORTAR_AUTOCONTROL, 'button', 'onclick=location.href=\'modulos/hseq/planAccion_excel.php?idFuente=' . $idFuente . '&periodo=' . $periodo . '&estado=' . $estado . '\'');
+        $form->addInputButton('button', 'exportA', 'exportA', BTN_EXPORTAR_AUTOCONTROL, 'button', 'onclick=location.href=\'modulos/interventoria/autocontrol_excel.php\'');
         $form->writeForm();
-        
+
         $dt = new CHtmlDataTable();
         $dt->setTitleTable(TITULO_PLANEACION_AUTOCONTROL);
         $titulos = array(USUARIO_NOMBRE, USUARIO_DOCUMENTO, USUARIO_CORREO);
@@ -464,23 +438,189 @@ switch ($task) {
         $form->addInputButton('submit', 'ok', 'ok', BTN_ATRAS, 'button', '');
         $form->writeForm();
 
-        for ($i = 0; $i < 7; $i++) {
+        $dt = new CHtmlDataTable();
+        $dt->setTitleTable(AUTOCONTROL_ACTIVIDADES);
+        $titulos = array(DESCRIPCION_DETALLE_AUTOCONTROL);
+        $condicion = "idPlaneacionAutocontrol = " . $idAutocontrol;
+        $datos = $daoBasica->getBasicas('actividadescontrol', $condicion);
+        $dt->setTitleRow($titulos);
+        $dt->setDataRows($datos);
+        $dt->setEditLink("?mod=" . $modulo . "&niv=" . $niv . "&task=editDetalle&idAutocontrol=" . $idAutocontrol . "&idResponsable=" . $id . "&tabla=actividadescontrol&from=seeAutocontrol");
+        $dt->setDeleteLink("?mod=" . $modulo . "&niv=" . $niv . "&task=deleteDetalle&idAutocontrol=" . $idAutocontrol . "&idResponsable=" . $id . "&tabla=actividadescontrol&from=seeAutocontrol");
+        $dt->setAddLink("?mod=" . $modulo . "&niv=" . $niv . "&task=addDetalle&idAutocontrol=" . $idAutocontrol . "&idResponsable=" . $id . "&tabla=actividadescontrol&from=seeAutocontrol");
+        $dt->setSeeLink("?mod=" . $modulo . "&niv=" . $niv . "&task=seeActividad&idAutocontrol=" . $idAutocontrol . "&idResponsable=" . $id);
+        $dt->setType(1);
+        $pag_crit = "";
+        $dt->setPag(1, $pag_crit);
+        $dt->writeDataTable($niv);
+        break;
+    
+    case 'seeActividad':
+        $idAutocontrol = $_REQUEST['idAutocontrol'];
+        $idActividad = $_REQUEST['id_element'];
+        $id = $_REQUEST['idResponsable'];
+        $form = new CHtmlForm();
+        $form->setTitle(TITULO_DETALLE_AUTOCONTROL);
+        $form->setMethod('post');
+        $form->setOptions('autoClean', false);
+        $form->setAction('?mod=' . $modulo . '&niv=' . $niv . '&id_element=' . $idAutocontrol . "&task=seeAutocontrol&idResponsable=$id");
+        $form->addInputButton('submit', 'ok', 'ok', BTN_ATRAS, 'button', '');
+        $form->writeForm();
+
+        for ($i = 0; $i < 2; $i++) {
             $informacion = obtenerInformacion($i);
             $dt = new CHtmlDataTable();
             $dt->setTitleTable($informacion['nombreTabla']);
             $titulos = array(DESCRIPCION_DETALLE_AUTOCONTROL);
-            $condicion = "idPlaneacionAutocontrol = " . $idAutocontrol;
+            $condicion = "idActividad = " . $idActividad;
             $datos = $daoBasica->getBasicas($informacion['tabla'], $condicion);
             $dt->setTitleRow($titulos);
             $dt->setDataRows($datos);
-            $dt->setEditLink("?mod=" . $modulo . "&niv=" . $niv . "&task=editDetalle&idAutocontrol=" . $idAutocontrol . "&idResponsable=" . $id . "&tabla=" . $informacion['tabla'] . '&from=seeAutocontrol');
-            $dt->setDeleteLink("?mod=" . $modulo . "&niv=" . $niv . "&task=deleteDetalle&idAutocontrol=" . $idAutocontrol . "&idResponsable=" . $id . "&tabla=" . $informacion['tabla'] . '&from=seeAutocontrol');
-            $dt->setAddLink("?mod=" . $modulo . "&niv=" . $niv . "&task=addDetalle&idAutocontrol=" . $idAutocontrol . "&idResponsable=" . $id . "&tabla=" . $informacion['tabla'] . '&from=seeAutocontrol');
+            $dt->setEditLink("?mod=" . $modulo . "&niv=" . $niv . "&task=editDetalleAutocontrol&idActividad=" . $idActividad . "&idResponsable=" . $id . "&tabla=" . $informacion['tabla'] . '&from=seeActividad&idAutocontrol='. $idAutocontrol);
+            $dt->setDeleteLink("?mod=" . $modulo . "&niv=" . $niv . "&task=deleteDetalleAutocontrol&idActividad=" . $idActividad . "&idResponsable=" . $id . "&tabla=" . $informacion['tabla'] . '&from=seeActividad&idAutocontrol='. $idAutocontrol);
+            $dt->setAddLink("?mod=" . $modulo . "&niv=" . $niv . "&task=addDetalleAutocontrol&idActividad=" . $idActividad . "&idResponsable=" . $id . "&tabla=" . $informacion['tabla'] . '&from=seeActividad&idAutocontrol='. $idAutocontrol);
             $dt->setType(1);
             $pag_crit = "";
             $dt->setPag(1, $pag_crit);
             $dt->writeDataTable($niv);
         }
+        break;
+        
+    /**
+     * la variable add, permite hacer la carga la página con las variables 
+     * que componen el objeto autocontrol @see \CPlaneacionAutocontrol
+     */
+    case 'addDetalleAutocontrol':
+        $from = $_REQUEST['from'];
+        $form = new CHtmlForm();
+        $tabla = $_REQUEST['tabla'];
+        $idResponsable = $_REQUEST['idResponsable'];
+        $idAutocontrol = $_REQUEST['idAutocontrol'];      
+        $idActividad = $_REQUEST['idActividad'];
+        $form->setTitle(TITULO_AGREGAR_DETALLE_AUTOCONTROL);
+        $form->setId('frm_add_detalle');
+        $form->setAction('?mod=' . $modulo . '&niv=1&task=saveAddDetalleAutocontrol&idResponsable=' . $idResponsable . '&idAutocontrol=' . $idAutocontrol . '&tabla=' . $tabla . '&from=' . $from . '&idActividad=' .$idActividad);
+        $form->setMethod('post');
+        $form->setClassEtiquetas('td_label');
+        $form->setTableId('frm_add_autocontrol');
+
+        $form->addEtiqueta(DESCRIPCION_DETALLE_AUTOCONTROL);
+        $form->addTextArea('textarea', 'txt_descripcion', 'txt_descripcion', '100', '5', '', '', ' title="' . $html->traducirTildes(TITLE_ALFANUMERICO) . '" required');
+
+        $form->addInputButton('submit', 'btn_enviar', 'btn_enviar', BTN_ACEPTAR, 'button', '');
+        $form->addInputButton('button', 'cancel', 'cancel', BTN_CANCELAR, 'button', 'onclick="cancelarAccion(\'frm_add_detalle\',\'?mod=' . $modulo . '&niv=' . $niv . '&idResponsable=' . $idResponsable . '&id_element=' . $idActividad . '&idAutocontrol=' . $idAutocontrol . '&task=' . $from . '\');"');
+
+        $form->writeForm();
+
+        break;
+
+
+    /**
+     * la variable saveAdd, permite almacenar el objeto basica en la 
+     * base de datos @see \CBasicaRelacionada
+     */
+    case 'saveAddDetalleAutocontrol':
+        $from = $_REQUEST['from'];
+        $idResponsable = $_REQUEST['idResponsable'];
+        $descripcion = $_REQUEST['txt_descripcion'];
+        $tabla = $_REQUEST['tabla'];
+        $idTabla = $_REQUEST['idActividad'];
+        $idAutocontrol = $_REQUEST['idAutocontrol'];
+
+        $basica = new CBasicaRelacionada(null, $descripcion, $idTabla);
+
+        $r = $daoBasica->insertBasicaRelacionada($basica, $tabla);
+        $m = ERROR_AGREGAR_AUTOCONTROL_BASICA;
+        if ($r == 'true') {
+            $m = EXITO_AGREGAR_AUTOCONTROL_BASICA;
+        }
+        echo $html->generaAviso($m, "?mod=" . $modulo . "&niv=1&task=" . $from . "&id_element=" . $idTabla . "&idResponsable=" . $idResponsable . "&idAutocontrol=" . $idAutocontrol);
+        break;
+
+
+    /**
+     * la variable saveAdd, permite editar el objeto basica en la 
+     * base de datos @see \CBasicaRelacionada
+     */
+    case 'editDetalleAutocontrol':
+        $from = $_REQUEST['from'];
+        $id_edit = $_REQUEST['id_element'];
+        $form = new CHtmlForm();
+        $tabla = $_REQUEST['tabla'];
+        $idResponsable = $_REQUEST['idResponsable'];
+        $idActividad = $_REQUEST['idActividad'];
+        $idAutocontrol = $_REQUEST['idAutocontrol'];
+        $condicion = $daoBasica->getCampos($tabla)[0] . " = " . $id_edit;
+        $basica = $daoBasica->getBasicaById($tabla, $condicion);
+        $form->setTitle(TITULO_EDITAR_DETALLE_AUTOCONTROL);
+        $form->setId('frm_edit_detalle');
+        $form->setAction('?mod=' . $modulo . '&niv=1&task=saveEditDetalleAutocontrol&idResponsable=' . $idResponsable . '&idAutocontrol=' . $idAutocontrol . '&tabla=' . $tabla . '&id_edit=' . $id_edit . '&from=' . $from . '&idActividad=' . $idActividad);
+        $form->setMethod('post');
+        $form->setClassEtiquetas('td_label');
+        $form->setTableId('frm_add_autocontrol');
+
+        $form->addEtiqueta(DESCRIPCION_DETALLE_AUTOCONTROL);
+        $form->addTextArea('textarea', 'txt_descripcion', 'txt_descripcion', '100', '5', $basica->getDescripcion(), '', ' title="' . $html->traducirTildes(TITLE_ALFANUMERICO) . '" required');
+
+        $form->addInputButton('submit', 'btn_enviar', 'btn_enviar', BTN_ACEPTAR, 'button', '');
+        $form->addInputButton('button', 'cancel', 'cancel', BTN_CANCELAR, 'button', 'onclick="cancelarAccion(\'frm_edit_detalle\',\'?mod=' . $modulo . '&niv=' . $niv . '&idResponsable=' . $idResponsable . '&id_element=' . $idActividad . '&task=' . $from . '&idAutocontrol=' . $idAutocontrol . '\');"');
+
+        $form->writeForm();
+        break;
+
+    /**
+     * la variable saveAdd, permite almacenar el objeto basica en la 
+     * base de datos @see \CBasicaRelacionada
+     */
+    case 'saveEditDetalleAutocontrol':
+        $from = $_REQUEST['from'];
+        $id = $_REQUEST['id_edit'];
+        $idResponsable = $_REQUEST['idResponsable'];
+        $descripcion = $_REQUEST['txt_descripcion'];
+        $tabla = $_REQUEST['tabla'];
+        $idAutocontrol = $_REQUEST['idAutocontrol'];
+        $idTabla = $_REQUEST['idActividad'];
+
+        $basica = new CBasicaRelacionada($id, $descripcion, $idTabla);
+
+        $r = $daoBasica->updateBasicaRelacionada($basica, $tabla);
+        $m = ERROR_EDITAR_AUTOCONTROL_BASICA;
+        if ($r == 'true') {
+            $m = EXITO_EDITAR_AUTOCONTROL_BASICA;
+        }
+        echo $html->generaAviso($m, "?mod=" . $modulo . "&niv=1&task=" . $from . "&id_element=" . $idTabla . "&idResponsable=" . $idResponsable . '&idAutocontrol=' . $idAutocontrol);
+        break;
+
+    /**
+     * la variable delete, permite hacer la carga del objeto autocontrol 
+     * y espera confirmacion de eliminarlo @see \CPlaneacionAutocontrol
+     */
+    case 'deleteDetalleAutocontrol':
+        $from = $_REQUEST['from'];
+        $tabla = $_REQUEST['tabla'];
+        $id_delete = $_REQUEST['id_element'];
+        $idResponsable = $_REQUEST['idResponsable'];
+        $idAutocontrol = $_REQUEST['idAutocontrol'];
+        $idActividad = $_REQUEST['idActividad'];
+        echo $html->generaAdvertencia(CONFIRMAR_BORRAR_AUTOCONTROL_BASICA, '?mod=' . $modulo . '&niv=1&task=confirmDeleteDetalleAutocontrol&id_element=' . $id_delete . '&idResponsable=' . $idResponsable . '&idAutocontrol=' . $idAutocontrol . '&tabla=' . $tabla . '&from=' . $from . '&idActividad=' . $idActividad, 'onclick=location.href=\'?mod=' . $modulo . '&niv=1&id_element=' . $idActividad . '&idResponsable=' . $idResponsable . '&task=' . $from . '&idAutocontrol=' . $idAutocontrol .'\'');
+        break;
+    /**
+     * la variable confirmDelete, permite eliminar el objeto autocontrol 
+     * de la base de datos @see \CPlaneacionAutocontrol
+     */
+    case 'confirmDeleteDetalleAutocontrol':
+        $from = $_REQUEST['from'];
+        $tabla = $_REQUEST['tabla'];
+        $id_delete = $_REQUEST['id_element'];
+        $idResponsable = $_REQUEST['idResponsable'];
+        $idAutocontrol = $_REQUEST['idAutocontrol'];
+        $idActividad = $_REQUEST['idActividad'];
+        $r = $daoBasica->deleteBasicaRelacionadaById($id_delete, $tabla);
+        $m = ERROR_BORRAR_AUTOCONTROL_BASICA;
+        if ($r == 'true') {
+            $m = EXITO_BORRAR_AUTOCONTROL_BASICA;
+        }
+        echo $html->generaAviso($m, "?mod=" . $modulo . "&niv=1&task=" . $from . "&id_element=" . $idActividad . '&idResponsable=' . $idResponsable . '&idAutocontrol=' . $idAutocontrol);
         break;
 
     /**
@@ -671,7 +811,7 @@ switch ($task) {
         $dt->setPag(1, $pag_crit);
         $dt->writeDataTable($niv);
         break;
-    
+
     case 'seeObservacionesControl':
         $idResponsable = $_REQUEST['idResponsable'];
         $id_element = $_REQUEST['id_element'];

@@ -17,8 +17,9 @@ define('TITULO_EDITAR_PLANEACION_AUTOCONTROL', 'Editar Planeación Autocontrol')
 define('TITULO_AGREGAR_PLANEACION_CONTROL', 'Agregar Planeación Control');
 define('TITULO_EDITAR_PLANEACION_CONTROL', 'Editar Planeación Control');
 
-define('AUTOCONTROL_OBJETIVOS', 'Objetivos');
+define('AUTOCONTROL_OBJETIVOS', 'Objetivo');
 define('AUTOCONTROL_RESPONSABLE_PNC', 'Responsable PNC');
+define('AUTOCONTROL_RESPONSABLE', 'Responsable');
 
 define('ERROR_AGREGAR_PLANEACION_AUTOCONTROL', 'Ocurrio un error al agregar la Planeación Autocontrol');
 define('EXITO_AGREGAR_PLANEACION_AUTOCONTROL', 'El Autocontrol ha sido agregado con éxito');
@@ -49,7 +50,7 @@ define('CONTROL_VERIFICACION', 'Verificación');
 define('CONTROL_NUMERO_DOCUMENTO_CONTRACTUAL', 'Número Documento Contractual');
 define('CONTROL_METODOLOGIA', 'Metodología');
 define('TITULO_DETALLE_AUTOCONTROL', 'Detalle Registro');
-define('AUTOCONTROL_ACTIVIDADES', 'Actividades');
+define('AUTOCONTROL_ACTIVIDADES', 'Actividad');
 define('AUTOCONTROL_CONTROL', 'Control');
 define('AUTOCONTROL_CRITERIOS_ACEPTACION', 'Criterios de Aceptación');
 define('AUTOCONTROL_FRECUENCIA', 'Frecuencia');

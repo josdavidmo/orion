@@ -247,10 +247,10 @@ class CCorrespondenciaData {
             $codigoReferencia = str_replace("'", "", $array[12]);
             $mail->Subject = $codigoReferencia;
             date_default_timezone_set('America/Bogota');
-            $now = date('h', time());
-
+            $now = date('H', time());
+            
             $saludo = BUENOS_DIAS;
-            if ($now > 12) {
+            if ($now >= 12) {
                 $saludo = BUENOS_TARDES;
             }
             $saludo .= ": <br>";

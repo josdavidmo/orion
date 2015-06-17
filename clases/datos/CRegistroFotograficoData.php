@@ -27,6 +27,27 @@ class CRegistroFotograficoData {
         $this->daoActividad = new CActividadBitacoraData($this->db);
         $this->daoBitacora = new CBitacoraData($this->db);
     }
+    
+    public function getRegistroFotograficoSincronizar($idUsuario) {
+        $registrosFotograficos = null;
+        $sql = "SELECT * "
+                . "FROM registrofotografico r "
+                . "INNER JOIN actividad a ON a.idActividad = r.IdActividad "
+                . "INNER JOIN bitacora b ON b.idBitacora = a.idBitacora "
+                . "WHERE r.sync AND b.idUsuario = $idUsuario";
+        $r = $this->db->ejecutarConsulta($sql);
+        if ($r) {
+            $cont = 0;
+            while ($w = mysql_fetch_array($r)) {
+                $registrosFotograficos[$cont]['idRegistroFotografico'] = $w['idRegistroFotografico'];
+                $registrosFotograficos[$cont]['descripcionRegistroFotografico'] = $w['descripcionRegistroFotografico'];
+                $registrosFotograficos[$cont]['archivo'] = $w['archivo'];
+                $registrosFotograficos[$cont]['idActividad'] = $w['IdActividad'];
+                $cont++;
+            }
+        }
+        return $registrosFotograficos;
+    }
 
     /**
      * Obtiene un registro fotografico dado su id.
@@ -37,7 +58,7 @@ class CRegistroFotograficoData {
         $registroFotografico = null;
         $sql = "SELECT * "
                 . "FROM registrofotografico "
-                . "WHERE idRegistroFotografico = " . $idRegistroFotografico;
+                . "WHERE idRegistroFotografico = '$idRegistroFotografico'";
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             $w = mysql_fetch_array($r);
@@ -151,21 +172,57 @@ class CRegistroFotograficoData {
         return $r;
     }
     
-    function getRegistroFotograficoSincronizacion($usuario,$html) {
-        $registrosFotograficos = null;
-        $sql = "SELECT registrofotografico.* "
-                . "FROM registrofotografico inner join actividad on registrofotografico.idActividad = actividad.idActividad "
-                . "inner join bitacora on actividad.idBitacora = bitacora.idBitacora "
-                . "WHERE registrofotografico.sync = 1 and bitacora.idUsuario = " . $usuario;
-        $r = $this->db->ejecutarConsulta($sql);
-        if ($r) {
-            while ($w = mysql_fetch_array($r)) {
-                $registrosFotograficos[count($registrosFotograficos)] = new registroFotografico(
-                        $w['idRegistroFotografico'], $html->traducirTildes($w['descripcionRegistroFotografico']), $w['archivo'],
-                        $w['IdActividad']);
+    public function enviarRegistroFotografico($idUsuario) {
+        $r = 'true';
+        $registrosFotograficos = $this->getRegistroFotograficoSincronizar($idUsuario);
+        if (count($registrosFotograficos) != 0) {
+            require_once "./clases/nusoap-0.9.5/lib/nusoap.php";
+            $cliente = new nusoap_client(DIRECCION_WEB_SERVICE_SINCRONIZACION);
+            $error = $cliente->getError();
+            if ($error) {
+                $r = SERVIDOR_NO_DISPONIBLE;
+            } else {
+                $totalRegistrosFotograficos = count($registrosFotograficos);
+                $exitosas = 0;
+                foreach ($registrosFotograficos as $registroFotografico) {
+                    $param = array("idRegistroFotografico" => $registroFotografico['idRegistroFotografico'], 
+                                   "descripcionRegistroFotografico" => utf8_decode($registroFotografico['descripcionRegistroFotografico']), 
+                                   "archivo" => $registroFotografico['archivo'], 
+                                   "idActividad" => $registroFotografico['idActividad']);
+                    $result = $cliente->call("insertarRegistroFotografico", $param);
+                    if ($cliente->fault) {
+                        $r = NO_EXISTE_SINCRONIZACION;
+                    } else {
+                        $error = $cliente->getError();
+                        if ($error) {
+                            $r = ERROR_CONEXION;
+                        } else {
+                            if ($result) {
+                                $exitosas++;
+                                $this->setSyncRegistroFotografico($registroFotografico['idRegistroFotografico'], 0);
+                            } 
+                        }
+                    }
+                }
+                if (($exitosas / $totalRegistrosFotograficos) == 1) {
+                    $r = $exitosas . " " . SINCRONIZACION_RECIBIDA;
+                } else {
+                    $r = SINCRONIZACION_INCOMPLETA;
+                }
             }
+        } else {
+            $r = NO_SINCRONIZAR;
         }
-        return $registrosFotograficos;
+        return $r;
+    }
+
+    function setSyncRegistroFotografico($id, $valor) {
+        $tabla = "registrofotografico";
+        $campos = array('sync');
+        $valores = array($valor);
+        $condicion = " idRegistroFotografico = '$id'";
+        $r = $this->db->actualizarRegistro($tabla, $campos, $valores, $condicion);
+        return $r;
     }
 
 }

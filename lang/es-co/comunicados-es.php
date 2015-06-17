@@ -104,4 +104,7 @@ define('EXITO_RESPONDER_COMUNICADO', 'El comunicado ha sido respondido con éxit
 define('ERROR_RESPONDER_COMUNICADO', 'Ocurrio un error al responder el comunicado');
 define('BUENOS_DIAS', 'Buenos Dias');
 define('BUENOS_TARDES', 'Buenas Tardes');
+define('CONFIRMAR_BORRAR_CORRESPONDENCIA_ASOCIACION', 'Desea borrar la respuesta al comunicado');
+define('EXITO_BORRAR_CORRESPONDENCIA_ASOCIACION', 'La respuesta ha sido borrada con éxito');
+define('ERROR_BORRAR_CORRESPONDENCIA_ASOCIACION', 'Ocurrio un error al borrar la respuesta');
 ?>
