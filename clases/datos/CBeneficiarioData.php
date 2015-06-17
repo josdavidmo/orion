@@ -1,31 +1,42 @@
 <?php
 
 /**
- * Clase Beneficiario Data
- * Usado para la conexion con la base de datos.
+ * Clase CBeneficiarioData
+ * Usada para establecer la conexion con la base de datos,ejecucion de consultas 
+ * y  la implementacion de operaciones Crud(Create, Read, Update and Delete), 
+ * sobre la informacion referente a los beneficiarios.
+ * @see beneficiarios.php(@package modulos,@subpackage beneficiarios)
+ * @see beneficiariosCambiosTransferencias.php(@package modulos,@subpackage beneficiarios)
  * @package clases
  * @subpackage datos
+ * @access public
  * @author SERTIC SAS
- * @version 2015.01.23
+ * @since @version 2015.01.23
  * @copyright SERTIC SAS
  */
 class CBeneficiarioData {
 
-    /** Manejador de la base de datos. */
+    /** 
+     * @var CData variable de clase de manejo y gestion de la base de datos. 
+     */
     var $db = null;
 
     /**
-     * Constructor de la clase.
-     * @param type $db
+     * Constructor de la clase CBeneficiarioData.
+     * @param CData $db, Variable de conexion de la base de datos.
      */
     function CBeneficiarioData($db) {
         $this->db = $db;
-    }
+    } 
 
     /**
-     * Obtiene los centros poblados almacenados en la base de datos.
-     * @return \CCentroPoblado
+     * Obtiene los centros poblados almacenados dentro de la base de datos, 
+     * aplicando un filtro por mun_id.
+     * @param string $criterio, Criterio de condicion de la consulta, valor default "0".
+     * @return array $centrosPoblados, retorna un arreglo con los objetos de tipo 
+     * CCentroPoblado y sus respectivos atributos. 
      */
+   
     public function getCentrosPoblados($criterio = "0") {
         $centrosPoblados = null; 
         $sql = "SELECT idCentroPoblado, codigoDane, nombre "
@@ -49,6 +60,13 @@ class CBeneficiarioData {
         return $centrosPoblados;
     }
     
+    /**
+     * Obtiene la ubicacion de un beneficiario a traves de su Id desde la base de datos.
+     * @param Integer $idBeneficiario, Id del beneficiario del cual se desea 
+     * obtener la ubicacion.
+     * @return array $ubicacion, retorna un array con los datos de la ubicacion 
+     * del beneficiario. 
+     */
     public function getUbicacionBeneficiarioById($idBeneficiario){
         $sql = "SELECT b.idBeneficiario, re.der_id, de.dep_id, mu.mun_id,
                        c.idCentroPoblado
@@ -71,9 +89,9 @@ class CBeneficiarioData {
     }
 
     /**
-     * Obtiene el centro poblado dado su id.
-     * @param type $idCentroPoblado
-     * @return \CCentroPoblado
+     * Obtiene un centro poblado a traves de su Id desde la base da datos.
+     * @param Integer $idCentroPoblado, id del centro poblado que se desea obtener.
+     * @return CCentroPoblado, retorna un objeto de tipo CCentroPoblado. 
      */
     public function getCentrosPobladosById($idCentroPoblado) {
         $sql = "SELECT idCentroPoblado, codigoDane, nombre "
@@ -88,10 +106,10 @@ class CBeneficiarioData {
         return $centroPoblado;
     }
 	
-	/**
-     * Obtiene un centro poblado dado el codigo dane.
-     * @param type $codigoDane
-     * @return \CCentroPoblado
+    /**
+     * Obtiene un centro poblado a traves de su Codigo Dane desde la base da datos.
+     * @param Integer $codigoDane, Codigo Dane del centro poblado que se desea obtener.
+     * @return CCentroPoblado, retorna un objeto de tipo CcentroPoblado. 
      */
     public function getCentroPobladoByCodigoDane($codigoDane){
         $sql = "SELECT idCentroPoblado, codigoDane, nombre "
@@ -106,10 +124,10 @@ class CBeneficiarioData {
         return $centroPoblado;
     }
 
-    /**
-     * Obtener tiene todos los beneficiarios almacenados en la base de datos.
-     * @param var $criterio
-     * @return type
+   /**
+     * Obtiene los beneficiarios  almacenados dentro de la base da datos.
+     * @param string $criterio, Criterio de condicion de la consulta, valor default "0".
+     * @return array $beneficiarios, retorna un array con los beneficiarios. 
      */
     public function getBeneficiarios($criterio = "1") {
         $beneficiarios = null;
@@ -167,10 +185,9 @@ class CBeneficiarioData {
         return $beneficiarios;
     }
 
-    /**
-     * Obtener tiene todos los beneficiarios almacenados en la base de datos.
-     * @param var $tipo
-     * @return type
+    /* Obtiene un beneficiario a través de su tipo desde la base da datos.
+     * @param string $tipo,criterio de condición de la consulta.
+     * @return array $beneficiarios, retorna un array con los beneficiario obtenidos. 
      */
     public function getBeneficiariosByTipo($tipo, $condicion) {
         $criterio = "(b.idTipoBeneficiario != 5 AND b.idTipoBeneficiario != 6)";
@@ -233,10 +250,11 @@ class CBeneficiarioData {
         return $beneficiarios;
     }
 
-    /**
-     * Obtiene la informacion de un beneficiario dado el id del mismo.
-     * @param type $idBeneficiario
-     * @return \CBeneficiario
+       
+     /**
+     * Obtiene un beneficiario a traves de su Id desde la base da datos.
+     * @param Integer $idBeneficiario, Id del beneficiario que se desea obtener.
+     * @return CBeneficiario, retorna un objeto de tipo CBeneficiario. 
      */
     public function getBeneficiarioById($idBeneficiario) {
         $beneficiario = null;
@@ -251,9 +269,9 @@ class CBeneficiarioData {
     }
 
     /**
-     * Inserta un beneficiario en la base de datos.
-     * @param \CBeneficiario $beneficiario
-     * @return type
+     * Inserta un beneficiario y sus atributos dentro la base de datos.
+     * @param CBeneficiario $beneficiario, objeto CBeneficiario con sus atributos.
+     * @return string $r, retorna "true" si la inserccion fue  exitosa.
      */
     public function insertBeneficiario($beneficiario) {
         $tabla = "beneficiario";
@@ -287,9 +305,9 @@ class CBeneficiarioData {
     }
 
     /**
-     * Actualiza un beneficiario de la base de datos.
-     * @param \CBeneficiario $beneficiario
-     * @return type
+     * Actualiza un beneficiario existente en la base de datos.
+     * @param CBeneficiario $beneficiario, Objeto CBeneficiario con sus atributos.
+     * @return string $r, retorna "true" si la actualizacion fue  exitosa.
      */
     public function updateBeneficiario($beneficiario) {
         $tabla = "beneficiario";
@@ -325,10 +343,11 @@ class CBeneficiarioData {
         return $r;
     }
 
+    
     /**
-     * Elimina un beneficiario de la base de datos
-     * @param type $idBeneficiario
-     * @return type
+     * Elimina un beneficiario de la base de datos.
+     * @param Integer $idBeneficiario, Id del beneficiario que se eliminara.
+     * @return string $r, retorna "true" si la eliminacion fue exitosa.
      */
     public function deleteBodegaById($idBeneficiario) {
         $tabla = "beneficiario";
@@ -336,11 +355,14 @@ class CBeneficiarioData {
         $r = $this->db->borrarRegistro($tabla, $predicado);
         return $r;
     }
-
-    /**
-     * Obtiene todos los historiales de cambio sobre un beneficario.
-     * @return type
+    
+   /**
+     * Obtienen todos los historiales de cambio efectuados sobre los beneficiarios.
+     * @param No recibe parametro alguno.
+     * @return array, retorna un array  $historialcambiosbeneficiarios con el 
+     * historial de cambios de los beneficiarios.
      */
+    
     public function getHistorialCambiosBeneficiarios() {
         $historialcambiosbeneficiarios = null;
         $sql = "SELECT idHistorialCambiosBeneficiarios, "
@@ -380,10 +402,11 @@ class CBeneficiarioData {
         return $historialcambiosbeneficiarios;
     }
 
-    /**
-     * Obtiene un historial de cambios de beneficiario dado su id.
-     * @param type $idHistorial
-     * @return \CHistorialCambiosBeneficiario
+   /**
+     * Obtiene el historial de cambios de un beneficiario a través de su Id.
+     * @param Integer $idHisotorial, Id del beneficiario que se desea consultar.
+     * @return CHistorialCambiosBeneficiario, Retorna un objeto de tipo
+     * CHistorialCambiosBeneficiario.
      */
     public function getHistorialCambiosBeneficiariosById($idHistorial) {
         $historialcambiosbeneficiario = null;
@@ -398,9 +421,11 @@ class CBeneficiarioData {
     }
 
     /**
-     * Inserta el historial de cambios de un beneficiario.
-     * @param \CHistorialCambiosBeneficiario $historialCambioBeneficiario
-     * @return type
+     * Inserta el historial de cambios de un beneficiario y sus atributos 
+     * dentro la base de datos.
+     * @param CHistorialCambiosBeneficiario $historialCambioBeneficiario,
+     * Objeto CHistorialCambiosBeneficiario con sus atributos.
+     * @return string $r, retorna "true" si la inserccion fue  exitosa.
      */
     public function insertHistorialCambiosBeneficiarios($historialCambioBeneficiario) {
         $r = 'false';
@@ -420,9 +445,11 @@ class CBeneficiarioData {
     }
 
     /**
-     * Actualiza un beneficiario de la base de datos.
-     * @param \CHistorialCambiosBeneficiario $historialCambioBeneficiario
-     * @return type
+     * Actualiza el historial de cambios de un beneficiario existente en la base 
+     * de datos.
+     * @param CHistorialCambiosBeneficiario $historialCambioBeneficiario,
+     * Objeto CHistorialCambiosBeneficiario con sus atributos.
+     * @return string $r, retorna "true" si la actualizacion fue  exitosa.
      */
     public function updateHistorialCambiosBeneficiarios($historialCambioBeneficiario) {
         $r = true;
@@ -455,9 +482,10 @@ class CBeneficiarioData {
     }
 
     /**
-     * Almacena un archivo en la ruta historial beneficiarios.
-     * @param type $archivo
-     * @return type
+     * Almacena un archivo en la ruta asignada a historial beneficiarios.
+     * @access private
+     * @param string $archivo, nombre del archivo que se almacenara. 
+     * @return boolean, retorna True si el almacenamiento fue exitoso.
      */
     private function guardarArchivo($archivo) {
         $ruta = RUTA_DOCUMENTOS . "/historialbeneficiarios/";
@@ -480,9 +508,10 @@ class CBeneficiarioData {
     }
 
     /**
-     * Elimina un historial de cambios de la base de datos.
-     * @param type $idHistorialCambiosBeneficiarios
-     * @return type
+     * Elimina el historial de cambios de un beneficiario de la base de datos.
+     * @param Integer $idHistorialCambiosBeneficiarios, Id del historial de cambios 
+     * de un beneficiario que se eliminara.
+     * @return string $r, retorna "true" si la eliminacion fue exitosa.
      */
     public function deleteHistorialCambiosBeneficiariosById($idHistorialCambiosBeneficiarios) {
         $tabla = "historialcambiosbeneficiarios";
@@ -492,9 +521,9 @@ class CBeneficiarioData {
     }
 	
 	/**
-	* Carga masivamente los datos contenidos en un archivo excel.
-	* @param type $file
-	* @return type $r
+	* Realiza la carga masiva de los datos contenidos en un archivo excel.
+	* @param string $file, nombre del archivo del cual se realizara la carga.
+	* @return string, retorna "true" si la carga masiva fue exitosa.
 	*/
     public function cargaMasiva($file) {
         require_once './clases/Excel/oleread.inc';

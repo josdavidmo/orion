@@ -1,27 +1,38 @@
 <?php
+
 /**
- * Clase destinada a la gestio de datos referentes a planeaciones
- * @version 1.0
- * @since 31/07/2014
- * @author Brian Kings
+ * Clase CPlaneacionData
+ * Usada para establecer la conexion con la base de datos, ejecucion de consultas 
+ * y  la implementacion de operaciones Crud(Create, Read, Update and Delete) sobre
+ * la informacion referente a los beneficiarios y los historiales de cambios.
+ * @see beneficiarios.php (@package modulos,@subpackage beneficiarios)
+ * @see beneficiariosCambiosTransferencias.php(@package modulos,@subpackage beneficiarios)
+ * @package clases
+ * @subpackage datos
+ * @access public
+ * @author SERTIC SAS
+ * @since @version 2015.01.23
+ * @copyright SERTIC SAS
  */
 class CPlaneacionData {
+
     /**
-     *  Instancia de la clase que conecta la base de datos
-     * @var CData
+     * @var CData variable de clase de manejo y gestion de la base de datos. 
      */
     var $db = null;
+
     /**
-     * Constructor de la clase
-     * @param CData $db
+     * Constructor de la clase CBeneficiarioData.
+     * @param CData $db, Variable de conexion de la base de datos
      */
     function CPlaneacionData($db) {
         $this->db = $db;
     }
-    /*
-     * Obtienes las regiones y las organiza segun el criterio ingresado
-     * @param String $orden 
-     * @return Array
+
+    /**
+     * Obtiene las regiones y las organiza segun el parametro de orden seleccionado.
+     * @param string $orden, parametro utilizado para ordenar las regiones obtenidas.
+     * @return array $regiones, retorna un Arreglo con las regiones obtenidas.
      */
     function getRegiones($orden) {
         $sql = "select * from departamento_region order by " . $orden;
@@ -37,11 +48,14 @@ class CPlaneacionData {
         }
         return $regiones;
     }
-    /*
-     * Obtiene los departamentos dependiendo de la region ingresada como criterio
-     * @param String $criterio 
-     * @param String $orden 
-     * @return Array
+
+    /**
+     * Obtiene los departamentos de una region en particular que se pasa como
+     * paramtero, junto con el criterio de orden del arreglo de salida.
+     * @param string $orden, parametro utilizado para ordenar los departamentos 
+     * obtenidos.
+     * @param string $criterio, parametro de condicion de consulta.  
+     * @return array $regiones, retorna un arreglo con los departamentos  obtenidos.
      */
     function getDepartamento($criterio = "0", $orden = "dep_nombre") {
         $regiones = null;
@@ -57,11 +71,14 @@ class CPlaneacionData {
         }
         return $regiones;
     }
-    /*
-     * Obtiene los municipios dependiendo del departamento ingresado como criterio
-     * @param String $criterio 
-     * @param String $orden 
-     * @return Array
+
+    /**
+     * Obtiene los municipios de un departamento en particular que se pasa como 
+     * paramtero, junto con el criterio de orden del arreglo de salida.
+     * @param string $orden, parametro utilizado para ordenar los departamentos 
+     * obtenidos.
+     * @param string $criterio, parametro de condicion de consulta. 
+     * @return array $regiones, retorna un arreglo con los municipios obtenidos.
      */
     function getMunicipio($criterio = "0", $orden = "mun_nombre") {
         $regiones = null;
@@ -77,10 +94,11 @@ class CPlaneacionData {
         }
         return $regiones;
     }
-    /*
-     * Obtiene los ejes y los ordena segun el criterio ingresado
-     * @param String $orden 
-     * @return Array
+
+    /**
+     * Obtiene los ejes y los ordena segun el criterio de orden ingresdo.
+     * @param string $orden, parametro utilizado para ordenar los ejes obtenidos.
+     * @return array $ejes, retorna un arreglo con los ejes obtenidos.
      */
     function getEjes($orden) {
         $ejes = null;
@@ -96,11 +114,13 @@ class CPlaneacionData {
         }
         return $ejes;
     }
-    /*
-     * Obtiene las planeaciones ingresadas en la base de datos, que cumplan el criterio ingresado.
-     * @param String $criterio 
-     * @param String $orden 
-     * @return Array
+
+    /**
+     * Obtiene las planeaciones almacenadas en la base de datos mediante un 
+     * criterio y un parametro de orden.
+     * @param string $orden, parametro utilizado para ordenar las planeaciones obtenidas.
+     * @param string $criterio, parametro de condicion de consulta. 
+     * @return array $planeacion, retorna un arreglo con las planeaciones obtenidas.
      */
     function getPlaneacion($criterio, $orden) {
         $planeacion = null;
@@ -132,12 +152,16 @@ class CPlaneacionData {
         }
         return $planeacion;
     }
-    /*
-     * Obtiene las planeaciones para completar la tabla para ser vista desde el modulo ejecucion
-     * @param Boolean $excel 
-     * @param String $orden 
-     * @return Array
+
+    
+    /**
+     * Obtiene las planeaciones almacenadas en la base con el fin de completar la 
+     * tabla que se visualiza desde el modulo de ejecucion. 
+     * @param string $orden, parametro utilizado para ordenar las planeaciones obtenidas.
+     * @param string $exel,?. 
+     * @return array $planeacion, petorna un Arreglo con las planeaciones obtenidas.
      */
+
     function getPlaneacionVerEjecucion($criterio, $excel) {
         $planeacion = null;
         $sql = "SELECT p.pla_id, der.der_nombre,d.dep_nombre,m.mun_nombre,e.eje_nombre, "
@@ -204,41 +228,50 @@ class CPlaneacionData {
         }
         return $planeacion;
     }
-    /*
-     * Calcula los días entre dos fechas
-     * @param Date $fecha_i fecha inicial
-     * @param Date $fecha_f fecha final
-     * @return Integer 
+    
+    
+    /**
+     * Calcula la cantidad de dias entre dos fechas. 
+     * @param Date $fecha_i fecha inicial, parametro que especifica la fecha de inicio.
+     * @param Date $fecha_f fecha final, parametro que especifica la fecha final.
+     * @return integer $dias, retorna un numero con la cantidad de dias calculados.
      */
+    
     function dias_transcurridos_entre_fechas($fecha_i, $fecha_f) {
         $dias = (strtotime($fecha_f) - strtotime($fecha_i)) / 86400;
         $dias = floor($dias);
         return $dias;
     }
-    /*
-     * Obtiene el numero de ejes existenes
-     * @return Integer
+
+    /**
+     * Obtiene el numero de ejes existentes.
+     * @param no recibe paramtero alguno.
+     * @return integer $w, retorna el numero de posiciones del arreglo obtenido
+     * al ejecutar la consulta.
      */
+
     function getNumeroEjes() {
-        $sql = "select count(*) from eje " ;
+        $sql = "select count(*) from eje ";
         $r = ($this->db->ejecutarConsulta($sql));
         if ($r) {
             $w = mysql_fetch_array($r);
             return $w['count(*)'];
         }
     }
-    /*
-     * Obtiene el resumen de planeacion
-     * @param String $criterio 
-     * @return Array
+
+    /**
+     * Obtiene el resumen de la planeacion. 
+     * @param string $criterio, parametro de condicion de consulta. 
+     * @return array $resumen, retorna un arreglo con el resumen obtenido.
      */
+
     function getResumen($criterio) {
         $contadorEje = 1;
         $arreglo = null;
         $resumen = null;
         $total = null;
-        $numeroEjes=null;
-        $numeroEjes=  $this->getNumeroEjes();
+        $numeroEjes = null;
+        $numeroEjes = $this->getNumeroEjes();
         while ($contadorEje <= $numeroEjes) {  // indica los 4 ejes existentes
             $sql = "SELECT p.eje_id,e.eje_nombre, count(*), SUM(pla_numero_encuestas) FROM planeacion p 
                     inner join eje e on e.eje_id = p.eje_id 
@@ -263,17 +296,19 @@ class CPlaneacionData {
         $resumen[$contadorEje - 1] = $total;
         return $resumen;
     }
-    /*
-     * Ingresa los datos que recibe en la tabla planeaciond e la base de datos
-     * @param Integer $id identificador de la planeacion
-     * @param Integer $municipio
-     * @param Integer $eje
-     * @param Integer $numero_encuestas
-     * @param Date $fecha_inicio
-     * @param Date $fecha_fin
-     * @param Integer $usuario
-     * @return String
+
+    /**
+     * Inserta una planeacion y sus atributos dentro la base de datos.
+     * @param Integer $id, id de la planeacion insertada.
+     * @param string $municipio, municipio de la planeacion.
+     * @param string $eje, eje de la planeacion.
+     * @param Integer $numero_encuestas, numero de encuestas de la planeacion.
+     * @param Date $fecha_inicio, fecha de inicio de la planeacion.
+     * @param Date $fecha_fin, fecha de finalizacion de la planeacion.
+     * @param string $usuario, usuario de la planeacion.
+     * @return string, retorna "true" si la inserccion fue exitosa.
      */
+
     function insertPlaneacion($id, $municipio, $eje, $numero_encuestas, $fecha_inicio, $fecha_fin, $usuario) {
         $tabla = 'planeacion';
         $campos = 'pla_id,  mun_id,eje_id,pla_numero_encuestas, '
@@ -283,15 +318,17 @@ class CPlaneacionData {
         $r = $this->db->insertarRegistro($tabla, $campos, $valores);
         return $r;
     }
-    /*
-     * Actualiza los datos que recibe en la tabla planeacion de la base de datos segun el id
-     * @param Integer $municipio
-     * @param Integer $eje
-     * @param Integer $numero_encuestas
-     * @param Date $fecha_inicio
-     * @param Date $fecha_fin
-     * @param Integer $usuario
-     * @return String
+
+    /**
+     * Actualiza una planeacion existente en la base de datos a traves de su id.
+     * @param Integer $id, id de la planeacion insertada.
+     * @param string $municipio, municipio de la planeacion.
+     * @param string $eje, eje de la planeacion.
+     * @param Integer $numero_encuestas, numero de encuestas de la planeacion.
+     * @param Date $fecha_inicio, fecha de inicio de la planeacion.
+     * @param Date $fecha_fin, fecha de finalizacion de la planeacion.
+     * @param string $usuario, usuario de la planeacion.
+     * @return string, retorna "true" si la actualizacion fue  exitosa.
      */
     function updatePlaneacion($municipio, $eje, $numero_encuestas, $id, $fecha_inicio, $fecha_fin, $usuario) {
         $tabla = 'planeacion';
@@ -302,22 +339,27 @@ class CPlaneacionData {
         $r = $this->db->actualizarRegistro($tabla, $campos, $valores, $condicion);
         return $r;
     }
-    /*
-     * Elimina los datos de un planeacion segun el id que recibe en la base de datos
-     * @param Integer $id
-     * @return String
-     */
+
+   /**
+    * Elimina una planeacion de la base de datos.
+    * @param Integer $id, Id de la planeacion que se eliminara.
+    * @return string, retorna "true" si la eliminacion fue exitosa.
+    */
+
     function deletePlaneacion($id) {
         $tabla = "planeacion";
         $predicado = "pla_id = " . $id;
         $r = $this->db->borrarRegistro($tabla, $predicado);
         return $r;
     }
-    /*
-     * Obtiene los datos de una planeacion en especifico dependiendo del id ingresado
-     * @param Integer $id
-     * @return Array
+
+    /**
+     * Obtiene los datos de una planeacion a traves de su Id desde la base da datos.
+     * @param Integer $id, Id de la planeacion consultada.
+     * @return array $r, retorna un arreglo con los datos de la planeacion si el
+     * proceso es exitoso, en caso contrario retorna -1.
      */
+
     function getPlaneacionById($id) {
         $plan = null;
         $sql = "SELECT p.pla_id,  d.der_id,d.dep_id,m.mun_id,e.eje_id, p.pla_numero_encuestas,p.pla_fecha_inicio,p.pla_fecha_fin,p.usu_id "
@@ -330,11 +372,14 @@ class CPlaneacionData {
         else
             return -1;
     }
-    /*
-     * obtiene el id y nombre de los usuarios registrados en la tabla usuario de la base de datos
-     * @param String $orden 
-     * @return Array
+
+    /**
+     * Obtiene los usuarios de la base de datos y los organiza segun el parametro 
+     * de orden.
+     * @param string $orden, parameto de orden del arreglo de salida.
+     * @return array $usuarios, retorna un arreglo con los usuarios obtenidos.
      */
+
     function getUsuarios($orden) {
         $usuarios = null;
         $sql = "SELECT  usu_id , CONCAT( usu_nombre,'  ',usu_apellido)AS usu_nombre from usuario order by " . $orden;
@@ -349,10 +394,12 @@ class CPlaneacionData {
         }
         return $usuarios;
     }
-    /*
-     * Obtiene el id del municipio a partir de su nombre
-     * @param Integer $municipio 
-     * @return Integer
+
+   /**
+     * Obtiene el Id de un municipio a traves de su nombre desde la base da datos.
+     * @param string $municipio, nombre del municipio consultado.
+     * @return Integer $w, retorna el numero almacenado en el arreglo obtenido a 
+     * traves de la consulta.
      */
     function getMunicipioId($municipio) {
         $sql = "SELECT  mun_id from municipio where mun_nombre = '" . strtoupper($municipio) . "'";
@@ -362,10 +409,12 @@ class CPlaneacionData {
             return $w['mun_id'];
         }
     }
-    /*
-     * Obtiene el id del eje a partir de su nombre
-     * @param String $eje 
-     * @return Integer
+
+    /**
+     * Obtiene el Id de un eje a traves de su nombre desde la base da datos.
+     * @param string $eje, nombre del eje consultado.
+     * @return Integer $w, retorna el numero almacenado en el arreglo obtenido a 
+     * traves de la consulta.
      */
     function getEjeId($eje) {
         $sql = "SELECT  eje_id from eje where eje_nombre = '" . strtoupper($eje) . "'";
@@ -375,11 +424,14 @@ class CPlaneacionData {
             return $w['eje_id'];
         }
     }
-    /*
-     * obtiene el id del usuario a partir de su documento de identificacion
-     * @param Integer $documento 
-     * @return Integer
+
+    /**
+     * Obtiene el Id de un usuario a traves de su documento desde la base da datos.
+     * @param Integer $documento, documento de identidad del usuario consultado.
+     * @return Integer $w, retorna el numero almacenado en el arreglo obtenido a 
+     * traves de la consulta.
      */
+
     function getUsuarioId($documento) {
         $sql = "SELECT  usu_id from usuario where usu_documento = '" . $documento . "'";
         $r = $this->db->ejecutarConsulta($sql);
@@ -388,21 +440,27 @@ class CPlaneacionData {
             return $w['usu_id'];
         }
     }
-    /*
-     * ingresa los registros de las nuevas encuestas en la base de datos
-     * @param Array $valores
+
+    /**
+     * Inserta los registros de las nuevas encuestas en la base de datos.
+     * @param array $valores, arreglo con los valores de los atributos 
+     * de las encuestas.
      */
+
     function createEncuestas($valores) {
         $tabla = 'encuesta';
         $campos = ' enc_consecutivo, pla_id, ees_id ';
         $this->db->insertarVariosRegistros($tabla, $campos, $valores);
     }
-    /*
+
+      
+    /**
      * Elimina los registros de las encuestas que tienen el identificador de la 
-     * planeacion asignado
-     * @param Integer $id
-     * @return String
+     * planeacion asignado.
+     * @param Integer $i, Id de la planeacion.
+     * @return string, retorna "true" si la eliminacion fue exitosa.
      */
+
     function deleteEncuestas($id) {
         $this->deleteRespuestasPlaId($id);
         $tabla = "encuesta";
@@ -410,26 +468,34 @@ class CPlaneacionData {
         $r = $this->db->borrarRegistro($tabla, $predicado);
         return $r;
     }
-    /*
-     * Obtener el ultimo consecutivo para determinado municipio
-     * @param Integer $id_municipio
-     * @return Integer
+
+    /**
+     * Obtiene el ultimo consecutivo asignado a determinado municipio.
+     * @param Integer $id_municipio, Id del municipo.
+     * @return Integer $w, retorna el numero almacenado en el arreglo obtenido a 
+     * traves de la consulta.
      */
+
     function ultimoConsecutivoEncuesta($id_municipio) {
         $sql = "SELECT  max(enc_consecutivo)as mayor from encuesta where enc_consecutivo LIKE '" . $id_municipio . "%'";
         //echo $sql;
         $r = $this->db->ejecutarConsulta($sql);
         $w = mysql_fetch_array($r);
-        if ($w['mayor']<=0) {
+        if ($w['mayor'] <= 0) {
             return ($id_municipio * 1000);
         } else {
             return $w['mayor'];
         }
     }
-    /*
-     * Obtiene el id del ultimo registro ingresado
-     * @return Integer
+
+  
+   /**
+     * Obtiene el id del ultimo registro ingresado.
+     * @param no recibe parametro alguno.
+     * @return Integer $w, retorna el numero almacenado en el arreglo obtenido a 
+     * traves de la consulta.
      */
+
     function getUltimoIdPlaneacion() {
         $sql = "SELECT  MAX(pla_id) as mayor from planeacion";
         $r = $this->db->ejecutarConsulta($sql);
@@ -438,14 +504,16 @@ class CPlaneacionData {
             return $w['mayor'];
         }
     }
-    /*
-     * Obtiene el array de ids de las encuestas asociadas
-     * @param Integer $id
-     * * @return Array
+
+    /**
+     * Obtiene un array con los Ids de las encuestas asociadas en una planeacion.
+     * @param Integer $id, Id de la planeacion. 
+     * @return array $encuestas, retorna un arreglo con los Ids de las encuestas.
      */
+
     function getIdsEncuestas($id) {
-        $encuestas=null;
-        $sql = "SELECT  enc_id from encuesta where pla_id = ".$id;
+        $encuestas = null;
+        $sql = "SELECT  enc_id from encuesta where pla_id = " . $id;
         echo $sql;
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
@@ -457,49 +525,59 @@ class CPlaneacionData {
         }
         return $encuestas;
     }
-    /*
-     * Elimina las respuestas de una encuesta
-     * @param Integer $id 
+
+    /**
+     * Elimina las respuestas de una encuesta de una planeacion de la base de datos.
+     * @param Integer $id, Id de la encuesta.
      */
-    function deleteRespuestasPlaId($id){
-        $encuestas=$this->getIdsEncuestas($id);
-        $cont=0;
-        $predicado=' 0 ';
-        while($cont<count($encuestas)){
-            $predicado=$predicado.' or enc_id ='.$encuestas[$cont]['enc_id'];
+
+    function deleteRespuestasPlaId($id) {
+        $encuestas = $this->getIdsEncuestas($id);
+        $cont = 0;
+        $predicado = ' 0 ';
+        while ($cont < count($encuestas)) {
+            $predicado = $predicado . ' or enc_id =' . $encuestas[$cont]['enc_id'];
             $cont++;
         }
-        $r = $this->db->borrarRegistro('instrumento_respuestas',$predicado);
+        $r = $this->db->borrarRegistro('instrumento_respuestas', $predicado);
     }
+
     /**
-     * Obtiene el numero de encuestas en estado sin completar
-     * @param type $id
-     * @return type
+     * Obtiene el numero de encuestas que se encuentran en estado "sin completar".
+     * @param Integer $id, Id de la planeacion donde las encuestas estan asignadas.
+     * @return Integer $w, retorna el numero almacenado en el arreglo obtenido a 
+     * traves de la consulta.
      */
-    function obtenerNumeroDeEncuestasSinCompletar($id){
-        $sql="SELECT count(*)as mayor FROM encuesta WHERE pla_id = ".$id." and ees_id!=1";
+    function obtenerNumeroDeEncuestasSinCompletar($id) {
+        $sql = "SELECT count(*)as mayor FROM encuesta WHERE pla_id = " . $id . " and ees_id!=1";
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             $w = mysql_fetch_array($r);
             return $w['mayor'];
         }
     }
+
     /**
-     * Eliminar las encuestas sin completar de una planeacion
-     * @param type $id
+     * Elimina las encuestas en estado "sin completar", de una planeacion.
+     * @param Integer $id, Id de la planeacion de la cual se eliminaran las
+     * encuestas.
+     * @param Integer $numero_encuestas_eliminar, numero de encuestas a eliminar.
+     * @return string, retorna "true" si la eliminacion fue exitosa.
      */
-    function deleteEncuestasSinCompletar($id,$numero_encuestas_eliminar){
-        $condicional= $id.' and ees_id!=1 order by enc_id';
-        $encuestas=$this->getIdsEncuestas($condicional);
-        $cont=0;
-        $predicado=' 0 ';
-        while($cont<$numero_encuestas_eliminar){
-            $predicado=$predicado.' or enc_id ='.$encuestas[$cont]['enc_id'];
+    function deleteEncuestasSinCompletar($id, $numero_encuestas_eliminar) {
+        $condicional = $id . ' and ees_id!=1 order by enc_id';
+        $encuestas = $this->getIdsEncuestas($condicional);
+        $cont = 0;
+        $predicado = ' 0 ';
+        while ($cont < $numero_encuestas_eliminar) {
+            $predicado = $predicado . ' or enc_id =' . $encuestas[$cont]['enc_id'];
             $cont++;
         }
-        $r = $this->db->borrarRegistro('instrumento_respuestas',$predicado);
-        return $this->db->borrarRegistro('encuesta',$predicado);
+        $r = $this->db->borrarRegistro('instrumento_respuestas', $predicado);
+        return $this->db->borrarRegistro('encuesta', $predicado);
         // 2337 2319
     }
+
 }
+
 ?>
