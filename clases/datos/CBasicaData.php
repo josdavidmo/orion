@@ -16,9 +16,9 @@
  */
 class CBasicaData {
 
-    /** 
-    * @var CData variable de clase de manejo y gestion de la base de datos. 
-    */
+    /**
+     * @var CData variable de clase de manejo y gestion de la base de datos. 
+     */
     var $db = null;
 
     /**
@@ -29,16 +29,15 @@ class CBasicaData {
         $this->db = $db;
     }
 
-    
     /**
-    * Obtiene los centros poblados almacenados dentro de 
-    * la base de datos, aplicando un filtro por mun_id.
-    * @param string $criterio, Criterio de filtro de la
-    * consulta, valor default "0".
-    * @return array $centrosPoblados, retorna un arreglo
-    * cn los objetos de tipo /CCentroPoblado y sus respectivos 
-    * atributos. 
-    */
+     * Obtiene los centros poblados almacenados dentro de 
+     * la base de datos, aplicando un filtro por mun_id.
+     * @param string $criterio, Criterio de filtro de la
+     * consulta, valor default "0".
+     * @return array $centrosPoblados, retorna un arreglo
+     * cn los objetos de tipo /CCentroPoblado y sus respectivos 
+     * atributos. 
+     */
     public function getBasicas($tabla, $criterio = "1") {
         $basicas = null;
         $sql = "SELECT * FROM " . $tabla . " WHERE " . $criterio;
@@ -80,8 +79,8 @@ class CBasicaData {
     public function getIdBasicasByDescripcion($tabla, $descripcion) {
         $basica = null;
         $campos = $this->db->getCampos($tabla);
-        $sql = "SELECT " . $campos[0] 
-                . " FROM " . $tabla 
+        $sql = "SELECT " . $campos[0]
+                . " FROM " . $tabla
                 . " WHERE LOWER(" . $campos[1] . ") = LOWER('" . $descripcion . "')";
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {

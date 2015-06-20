@@ -9,50 +9,33 @@ $db = new CData(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);
 $db->conectar();
 $conData = new CConsultaData($db);
 
-$selectedTable = $_REQUEST['select_tabla'];
-$campos = $_REQUEST['select_columna'];
+$numerotablas = $_REQUEST['numeroTablas'];
+if ($numerotablas == NULL) {
+    $numerotablas = 1;
+}
+/** 
+ * En estos arreglos se almacenan las tablas y columnas seleccionadas,
+ * la idea es construir el query y colocarlo en el area de texto 'query'.
+ * Finalmente cuando el usuario de clic en el boton Generar reporte el programa
+ * hara el resto.
+ */
+$tablasSeleccionadas = array();
+$camposSeleccionados = array();
+for ($i = 0; $i < $numerotablas; $i++) {
+    $tablasSeleccionadas[] = $_REQUEST["select_tabla_$i"];
+    $camposSeleccionados[] = $_REQUEST["select_columna_$i"];
+}
+
 $data = "0";
-if ($campos != NULL) {
-    $columnas = implode(",", $campos);
-    $query = "SELECT $columnas FROM $selectedTable";
+$fields = "0";
+$query = $_REQUEST['query'];
+if ($query != NULL) {
     $elementos = $conData->ejecutarConsultaGenerada($query);
     $data = json_encode($elementos, JSON_NUMERIC_CHECK);
 }
-$infoCampos = array();
-foreach ($campos as $campo) {
-    $info = $conData->getTipoColumna($selectedTable, $campo);
-    switch ($info) {
-        case "int":
-            $info = "number";
-            break;
-        
-        case "double":
-            $info = "number";
-            break;
-        
-        case "datetime":
-            $info = "date";
-            break;
-        
-        case "date":
-            $info = "date";
-            break;
-        
-        default:
-            $info = "string";
-            break;
-    }
-    $aux = array("id" => $campo, "type" => $info);
-    $infoCampos[] = $aux;
-}
-$fields = json_encode($infoCampos);
 ?>
 <html lang="es">
     <head>
-        <script>
-            data = <?= $data?>;
-            fields = <?= $fields?>;
-        </script>
         <meta charset="utf-8" />
         <title>Reporteador</title>
         <!-- you do not have to use bootstrap but we use it by default -->
@@ -95,6 +78,17 @@ $fields = json_encode($infoCampos);
 
         <!-- Recline JS (combined distribution, all views) -->
         <script src="templates/report/dist/recline.js" type="text/javascript"></script>
+
+        <script>
+            function agregarTabla() {
+                var form = document.getElementById("form_tabla");
+                form.action = "reporteador.php?numeroTablas=<?= ($numerotablas + 1) ?>";
+                form.submit();
+            }
+
+            data = <?= $data ?>;
+            fields = <?= $fields ?>;
+        </script>
     </head>
     <body>
         <div class="container">
@@ -109,38 +103,56 @@ $fields = json_encode($infoCampos);
                     margin-bottom: 10px;
                 }
             </style>
-
-            <form lass="form-horizontal" role="form" action="reporteador.php" method="post">
+            <form id="form_query" class="form-horizontal" role="form" action="reporteador.php" method="post"> 
                 <div class="form-group">
-                    <label for="select_tabla" class="col-lg-2 control-label">Tabla</label>
+                    <label for="query" class="col-lg-2 control-label">Query</label>
                     <div class="col-lg-10">
-                        <select class="form-control" id="select_tabla" name="select_tabla" onchange="this.form.submit()" required>
-                            <option value="">Seleccione una</option>
-                            <?php $tablas = $conData->consultarTablas(); ?>
-                            <?php foreach ($tablas as $tabla) { ?>
-                                <?php if ($tabla['value'] == $selectedTable) { ?>
-                                    <option value="<?= $tabla['value'] ?>" selected><?= $tabla['texto'] ?></option>
-                                <?php } else { ?>
-                                    <option value="<?= $tabla['value'] ?>"><?= $tabla['texto'] ?></option>
-                                <?php } ?>
-                            <?php } ?>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="select_columna" class="col-lg-2 control-label">Columnas</label>
-                    <div class="col-lg-10">
-                        <select class="form-control" id="select_columna" name="select_columna[]" multiple required>
-                            <?php $columnas = $conData->consultarCampos($selectedTable); ?>
-                            <?php foreach ($columnas as $columna) { ?>
-                                <option value="<?= $columna['value'] ?>"><?= $columna['texto'] ?></option>
-                            <?php } ?>
-                        </select>
+                        <textarea id="query" name="query" class="form-control">SELECT * FROM actividad</textarea>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="col-lg-offset-2 col-lg-10">
                         <button type="submit" class="btn btn-default">Generar Reporte</button>
+                    </div>
+                </div>
+            </form>
+            <form id="form_tabla" class="form-horizontal" role="form" action="reporteador.php?numeroTablas=<?= $numerotablas ?>" method="post">
+                <?php for ($i = 0; $i < $numerotablas; $i++) { ?>
+                    <div class="form-group">
+                        <label for="select_tabla_<?= $i ?>" class="col-lg-2 control-label">Tabla</label>
+                        <div class="col-lg-10">
+                            <select class="form-control" id="select_tabla" name="select_tabla_<?= $i ?>" onchange="this.form.submit()">
+                                <option value="">Seleccione una</option>
+                                <?php $tablas = $conData->consultarTablas(); ?>
+                                <?php foreach ($tablas as $tabla) { ?>
+                                    <?php if ($tabla['value'] == $tablasSeleccionadas[$i]) { ?>
+                                        <option value="<?= $tabla['value'] ?>" selected><?= $tabla['texto'] ?></option>
+                                    <?php } else { ?>
+                                        <option value="<?= $tabla['value'] ?>"><?= $tabla['texto'] ?></option>
+                                    <?php } ?>
+                                <?php } ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="select_columna_<?= $i ?>" class="col-lg-2 control-label">Columnas</label>
+                        <div class="col-lg-10">
+                            <select class="form-control" id="select_columna" name="select_columna_<?= $i ?>[]" multiple>
+                                <?php $columnas = $conData->consultarCampos($tablasSeleccionadas[$i]); ?>
+                                <?php foreach ($columnas as $columna) { ?>
+                                    <?php if (in_array($columna['value'], $camposSeleccionados[$i])) { ?>
+                                        <option value="<?= $columna['value'] ?>" selected><?= $columna['texto'] ?></option>
+                                    <?php } else { ?>
+                                        <option value="<?= $columna['value'] ?>"><?= $columna['texto'] ?></option>
+                                    <?php } ?>
+                                <?php } ?>
+                            </select>
+                        </div>
+                    </div>
+                <?php } ?>
+                <div class="form-group">
+                    <div class="col-lg-offset-2 col-lg-10">
+                        <button onclick="agregarTabla()" class="btn btn-default">Agregar Tabla</button>
                     </div>
                 </div>
             </form>

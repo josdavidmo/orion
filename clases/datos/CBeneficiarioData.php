@@ -16,38 +16,37 @@
  */
 class CBeneficiarioData {
 
-    /** 
+    /**
      * @var CData variable de clase de manejo y gestion de la base de datos. 
      */
     var $db = null;
 
     /**
      * Constructor de la clase CBeneficiarioData.
-     * @param CData $db, Variable de conexion de la base de datos.
+     * @param CData $db Variable de conexion de la base de datos.
      */
     function CBeneficiarioData($db) {
         $this->db = $db;
-    } 
+    }
 
     /**
      * Obtiene los centros poblados almacenados dentro de la base de datos, 
      * aplicando un filtro por mun_id.
-     * @param string $criterio, Criterio de condicion de la consulta, valor default "0".
-     * @return array $centrosPoblados, retorna un arreglo con los objetos de tipo 
+     * @param string $criterio Criterio de condicion de la consulta, valor default "0".
+     * @return array $centrosPoblados retorna un arreglo con los objetos de tipo 
      * CCentroPoblado y sus respectivos atributos. 
      */
-   
     public function getCentrosPoblados($criterio = "0") {
-        $centrosPoblados = null; 
+        $centrosPoblados = null;
         $sql = "SELECT idCentroPoblado, codigoDane, nombre "
                 . "FROM centropoblado "
                 . "WHERE mun_id = " . $criterio . " "
                 . "ORDER BY nombre ASC ";
-		if($criterio == "0"){
-			$sql = "SELECT idCentroPoblado, codigoDane, nombre "
-                . "FROM centropoblado "
-                . "ORDER BY nombre ASC ";
-		}
+        if ($criterio == "0") {
+            $sql = "SELECT idCentroPoblado, codigoDane, nombre "
+                    . "FROM centropoblado "
+                    . "ORDER BY nombre ASC ";
+        }
         $r = $this->db->ejecutarConsulta($sql);
         if ($r) {
             $cont = 0;
@@ -59,15 +58,15 @@ class CBeneficiarioData {
         }
         return $centrosPoblados;
     }
-    
+
     /**
      * Obtiene la ubicacion de un beneficiario a traves de su Id desde la base de datos.
-     * @param Integer $idBeneficiario, Id del beneficiario del cual se desea 
+     * @param Integer $idBeneficiario Id del beneficiario del cual se desea 
      * obtener la ubicacion.
-     * @return array $ubicacion, retorna un array con los datos de la ubicacion 
+     * @return array $ubicacion retorna un array con los datos de la ubicacion 
      * del beneficiario. 
      */
-    public function getUbicacionBeneficiarioById($idBeneficiario){
+    public function getUbicacionBeneficiarioById($idBeneficiario) {
         $sql = "SELECT b.idBeneficiario, re.der_id, de.dep_id, mu.mun_id,
                        c.idCentroPoblado
                 FROM beneficiario b 
@@ -75,23 +74,23 @@ class CBeneficiarioData {
                 INNER JOIN municipio mu ON mu.mun_id = c.mun_id 
                 INNER JOIN departamento de ON de.dep_id = mu.dep_id 
                 INNER JOIN departamento_region re ON re.der_id = de.der_id 
-                WHERE b.idBeneficiario = ".$idBeneficiario;
+                WHERE b.idBeneficiario = " . $idBeneficiario;
         $r = $this->db->ejecutarConsulta($sql);
         $ubicacion = null;
         if ($r) {
             $w = mysql_fetch_array($r);
-            $ubicacion = array('region' => $w['der_id'], 
-                               'departamento' => $w['dep_id'], 
-                               'municipio' => $w['mun_id'], 
-                               'centroPoblado' => $w['idCentroPoblado']);
+            $ubicacion = array('region' => $w['der_id'],
+                'departamento' => $w['dep_id'],
+                'municipio' => $w['mun_id'],
+                'centroPoblado' => $w['idCentroPoblado']);
         }
         return $ubicacion;
     }
 
     /**
      * Obtiene un centro poblado a traves de su Id desde la base da datos.
-     * @param Integer $idCentroPoblado, id del centro poblado que se desea obtener.
-     * @return CCentroPoblado, retorna un objeto de tipo CCentroPoblado. 
+     * @param Integer $idCentroPoblado id del centro poblado que se desea obtener.
+     * @return CCentroPoblado retorna un objeto de tipo CCentroPoblado. 
      */
     public function getCentrosPobladosById($idCentroPoblado) {
         $sql = "SELECT idCentroPoblado, codigoDane, nombre "
@@ -105,13 +104,13 @@ class CBeneficiarioData {
         }
         return $centroPoblado;
     }
-	
+
     /**
      * Obtiene un centro poblado a traves de su Codigo Dane desde la base da datos.
      * @param Integer $codigoDane, Codigo Dane del centro poblado que se desea obtener.
      * @return CCentroPoblado, retorna un objeto de tipo CcentroPoblado. 
      */
-    public function getCentroPobladoByCodigoDane($codigoDane){
+    public function getCentroPobladoByCodigoDane($codigoDane) {
         $sql = "SELECT idCentroPoblado, codigoDane, nombre "
                 . "FROM centropoblado "
                 . "WHERE codigoDane = " . $codigoDane;
@@ -124,10 +123,10 @@ class CBeneficiarioData {
         return $centroPoblado;
     }
 
-   /**
+    /**
      * Obtiene los beneficiarios  almacenados dentro de la base da datos.
-     * @param string $criterio, Criterio de condicion de la consulta, valor default "0".
-     * @return array $beneficiarios, retorna un array con los beneficiarios. 
+     * @param string $criterio Criterio de condicion de la consulta, valor default "0".
+     * @return array $beneficiarios retorna un array con los beneficiarios. 
      */
     public function getBeneficiarios($criterio = "1") {
         $beneficiarios = null;
@@ -158,7 +157,7 @@ class CBeneficiarioData {
         if ($r) {
             $cont = 0;
             while ($w = mysql_fetch_array($r)) {
-                $beneficiarios[$cont]['idBeneficiario'] = $w['idBeneficiario'];			
+                $beneficiarios[$cont]['idBeneficiario'] = $w['idBeneficiario'];
                 $beneficiarios[$cont]['codigoInterventoria'] = $w['codigoInterventoria'];
                 $beneficiarios[$cont]['codigoMintic'] = $w['codigoMintic'];
                 $beneficiarios[$cont]['codigoOperador'] = $w['codigoOperador'];
@@ -185,9 +184,11 @@ class CBeneficiarioData {
         return $beneficiarios;
     }
 
-    /* Obtiene un beneficiario a través de su tipo desde la base da datos.
-     * @param string $tipo,criterio de condición de la consulta.
-     * @return array $beneficiarios, retorna un array con los beneficiario obtenidos. 
+    /**
+     * Obtiene un beneficiario a través de su tipo desde la base da datos.
+     * @param string $tipo criterio de condición de la consulta.
+     * @param string $condicion criterio de condición de la consulta.
+     * @return array $beneficiarios retorna un array con los beneficiario obtenidos. 
      */
     public function getBeneficiariosByTipo($tipo, $condicion) {
         $criterio = "(b.idTipoBeneficiario != 5 AND b.idTipoBeneficiario != 6)";
@@ -225,9 +226,9 @@ class CBeneficiarioData {
             $cont = 0;
             while ($w = mysql_fetch_array($r)) {
                 $beneficiarios[$cont]['idBeneficiario'] = $w['idBeneficiario'];
-				$beneficiarios[$cont]['codigoInterventoria'] = $w['codigoInterventoria'];
+                $beneficiarios[$cont]['codigoInterventoria'] = $w['codigoInterventoria'];
                 $beneficiarios[$cont]['codigoMintic'] = $w['codigoMintic'];
-                $beneficiarios[$cont]['codigoOperador'] = $w['codigoOperador'];        
+                $beneficiarios[$cont]['codigoOperador'] = $w['codigoOperador'];
                 $beneficiarios[$cont]['ubicacion'] = $w['ubicacion'];
                 $beneficiarios[$cont]['nombre'] = $w['nombre'];
                 $sur = "N";
@@ -250,11 +251,10 @@ class CBeneficiarioData {
         return $beneficiarios;
     }
 
-       
-     /**
+    /**
      * Obtiene un beneficiario a traves de su Id desde la base da datos.
-     * @param Integer $idBeneficiario, Id del beneficiario que se desea obtener.
-     * @return CBeneficiario, retorna un objeto de tipo CBeneficiario. 
+     * @param Integer $idBeneficiario Id del beneficiario que se desea obtener.
+     * @return CBeneficiario retorna un objeto de tipo CBeneficiario. 
      */
     public function getBeneficiarioById($idBeneficiario) {
         $beneficiario = null;
@@ -270,8 +270,8 @@ class CBeneficiarioData {
 
     /**
      * Inserta un beneficiario y sus atributos dentro la base de datos.
-     * @param CBeneficiario $beneficiario, objeto CBeneficiario con sus atributos.
-     * @return string $r, retorna "true" si la inserccion fue  exitosa.
+     * @param CBeneficiario $beneficiario objeto CBeneficiario con sus atributos.
+     * @return string $r retorna "true" si la insercion fue exitosa.
      */
     public function insertBeneficiario($beneficiario) {
         $tabla = "beneficiario";
@@ -306,8 +306,8 @@ class CBeneficiarioData {
 
     /**
      * Actualiza un beneficiario existente en la base de datos.
-     * @param CBeneficiario $beneficiario, Objeto CBeneficiario con sus atributos.
-     * @return string $r, retorna "true" si la actualizacion fue  exitosa.
+     * @param CBeneficiario $beneficiario Objeto CBeneficiario con sus atributos.
+     * @return string $r retorna "true" si la actualizacion fue  exitosa.
      */
     public function updateBeneficiario($beneficiario) {
         $tabla = "beneficiario";
@@ -343,11 +343,10 @@ class CBeneficiarioData {
         return $r;
     }
 
-    
     /**
      * Elimina un beneficiario de la base de datos.
-     * @param Integer $idBeneficiario, Id del beneficiario que se eliminara.
-     * @return string $r, retorna "true" si la eliminacion fue exitosa.
+     * @param Integer $idBeneficiario Id del beneficiario que se eliminara.
+     * @return string $r retorna "true" si la eliminacion fue exitosa.
      */
     public function deleteBodegaById($idBeneficiario) {
         $tabla = "beneficiario";
@@ -355,14 +354,13 @@ class CBeneficiarioData {
         $r = $this->db->borrarRegistro($tabla, $predicado);
         return $r;
     }
-    
-   /**
+
+    /**
      * Obtienen todos los historiales de cambio efectuados sobre los beneficiarios.
      * @param No recibe parametro alguno.
-     * @return array, retorna un array  $historialcambiosbeneficiarios con el 
+     * @return array retorna un array  $historialcambiosbeneficiarios con el 
      * historial de cambios de los beneficiarios.
      */
-    
     public function getHistorialCambiosBeneficiarios() {
         $historialcambiosbeneficiarios = null;
         $sql = "SELECT idHistorialCambiosBeneficiarios, "
@@ -402,10 +400,10 @@ class CBeneficiarioData {
         return $historialcambiosbeneficiarios;
     }
 
-   /**
+    /**
      * Obtiene el historial de cambios de un beneficiario a través de su Id.
-     * @param Integer $idHisotorial, Id del beneficiario que se desea consultar.
-     * @return CHistorialCambiosBeneficiario, Retorna un objeto de tipo
+     * @param Integer $idHistorial Id del beneficiario que se desea consultar.
+     * @return CHistorialCambiosBeneficiario Retorna un objeto de tipo
      * CHistorialCambiosBeneficiario.
      */
     public function getHistorialCambiosBeneficiariosById($idHistorial) {
@@ -423,9 +421,9 @@ class CBeneficiarioData {
     /**
      * Inserta el historial de cambios de un beneficiario y sus atributos 
      * dentro la base de datos.
-     * @param CHistorialCambiosBeneficiario $historialCambioBeneficiario,
+     * @param CHistorialCambiosBeneficiario $historialCambioBeneficiario
      * Objeto CHistorialCambiosBeneficiario con sus atributos.
-     * @return string $r, retorna "true" si la inserccion fue  exitosa.
+     * @return string $r retorna "true" si la insercion fue  exitosa.
      */
     public function insertHistorialCambiosBeneficiarios($historialCambioBeneficiario) {
         $r = 'false';
@@ -447,9 +445,9 @@ class CBeneficiarioData {
     /**
      * Actualiza el historial de cambios de un beneficiario existente en la base 
      * de datos.
-     * @param CHistorialCambiosBeneficiario $historialCambioBeneficiario,
+     * @param CHistorialCambiosBeneficiario $historialCambioBeneficiario
      * Objeto CHistorialCambiosBeneficiario con sus atributos.
-     * @return string $r, retorna "true" si la actualizacion fue  exitosa.
+     * @return string $r retorna "true" si la actualizacion fue  exitosa.
      */
     public function updateHistorialCambiosBeneficiarios($historialCambioBeneficiario) {
         $r = true;
@@ -484,8 +482,8 @@ class CBeneficiarioData {
     /**
      * Almacena un archivo en la ruta asignada a historial beneficiarios.
      * @access private
-     * @param string $archivo, nombre del archivo que se almacenara. 
-     * @return boolean, retorna True si el almacenamiento fue exitoso.
+     * @param string $archivo nombre del archivo que se almacenara. 
+     * @return boolean retorna True si el almacenamiento fue exitoso.
      */
     private function guardarArchivo($archivo) {
         $ruta = RUTA_DOCUMENTOS . "/historialbeneficiarios/";
@@ -509,9 +507,9 @@ class CBeneficiarioData {
 
     /**
      * Elimina el historial de cambios de un beneficiario de la base de datos.
-     * @param Integer $idHistorialCambiosBeneficiarios, Id del historial de cambios 
+     * @param Integer $idHistorialCambiosBeneficiarios Id del historial de cambios 
      * de un beneficiario que se eliminara.
-     * @return string $r, retorna "true" si la eliminacion fue exitosa.
+     * @return string $r retorna "true" si la eliminacion fue exitosa.
      */
     public function deleteHistorialCambiosBeneficiariosById($idHistorialCambiosBeneficiarios) {
         $tabla = "historialcambiosbeneficiarios";
@@ -519,12 +517,12 @@ class CBeneficiarioData {
         $r = $this->db->borrarRegistro($tabla, $predicado);
         return $r;
     }
-	
-	/**
-	* Realiza la carga masiva de los datos contenidos en un archivo excel.
-	* @param string $file, nombre del archivo del cual se realizara la carga.
-	* @return string, retorna "true" si la carga masiva fue exitosa.
-	*/
+
+    /**
+     * Realiza la carga masiva de los datos contenidos en un archivo excel.
+     * @param string $file nombre del archivo del cual se realizara la carga.
+     * @return string retorna "true" si la carga masiva fue exitosa.
+     */
     public function cargaMasiva($file) {
         require_once './clases/Excel/oleread.inc';
         $daoBasica = new CBasicaData($this->db);
@@ -546,7 +544,7 @@ class CBeneficiarioData {
             $latitudMinutos = $data->sheets[0]['cells'][$i][8];
             $latitudSegundos = $data->sheets[0]['cells'][$i][9];
             $south = $data->sheets[0]['cells'][$i][10];
-            if($south == "S" || $south == "s"){
+            if ($south == "S" || $south == "s") {
                 $south = 1;
             } else {
                 $south = 0;
@@ -555,7 +553,7 @@ class CBeneficiarioData {
             $longitudMinutos = $data->sheets[0]['cells'][$i][12];
             $longitudSegundos = $data->sheets[0]['cells'][$i][13];
             $west = $data->sheets[0]['cells'][$i][14];
-            if($west == "W" || $west == "w"){
+            if ($west == "W" || $west == "w") {
                 $west = 1;
             } else {
                 $west = 0;
@@ -571,27 +569,7 @@ class CBeneficiarioData {
             $grupo = $daoBasica->getIdBasicasByDescripcion('grupobeneficiario', $grupo)->getId();
             $tipo = $data->sheets[0]['cells'][$i][20];
             $tipo = $daoBasica->getIdBasicasByDescripcion('tipobeneficiario', $tipo)->getId();
-            $beneficiario = new CBeneficiario($id, 
-                                              $codigoInterventoria, 
-                                              $codigoMintic, 
-                                              $codigoOperador, 
-                                              $nombre, 
-                                              $msnm, 
-                                              $latitudGrados, 
-                                              $latitudMinutos, 
-                                              $latitudSegundos, 
-                                              $south, 
-                                              $longitudGrados, 
-                                              $longitudMinutos, 
-                                              $longitudSegundos, 
-                                              $west, 
-                                              $fechaInicio, 
-                                              $meta, 
-                                              $estado, 
-                                              $dda, 
-                                              $grupo, 
-                                              $centroPoblado, 
-                                              $tipo);
+            $beneficiario = new CBeneficiario($id, $codigoInterventoria, $codigoMintic, $codigoOperador, $nombre, $msnm, $latitudGrados, $latitudMinutos, $latitudSegundos, $south, $longitudGrados, $longitudMinutos, $longitudSegundos, $west, $fechaInicio, $meta, $estado, $dda, $grupo, $centroPoblado, $tipo);
             $r = $r && $this->insertBeneficiario($beneficiario);
         }
         return $r;
