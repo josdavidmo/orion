@@ -1,32 +1,44 @@
 <?php
 
 /**
- * Clase Básica Data
- * Usado para la conexion con la base de datos.
+ * Clase CBásicaData
+ * Usada para establecer la conexion con la base de datos, ejecucion de consultas 
+ * y  la implementacion de operaciones Crud(Create, Read, Update and Delete)sobre 
+ * la informacion referente a las tablas basicas y a los registros de las mismas.
+ * @see beneficiarios.php (@package modulos,@subpackage beneficiarios)
+ * @see beneficiariosCambiosTransferencias.php(@package modulos,@subpackage beneficiarios)
  * @package clases
  * @subpackage datos
+ * @access public
  * @author SERTIC SAS
- * @version 2014.09.12
+ * @since @version 2015.01.23
  * @copyright SERTIC SAS
  */
 class CBasicaData {
 
-    /** Manejador de la base de datos. */
+    /** 
+    * @var CData variable de clase de manejo y gestion de la base de datos. 
+    */
     var $db = null;
 
     /**
-     * Constructor de la clase.
-     * @param type $db
+     * Constructor de la clase CBasicaData.
+     * @param CData $db, Variable de conexion de la  base de datos.
      */
     function CBasicaData($db) {
         $this->db = $db;
     }
 
+    
     /**
-     * Obtiene un elemento de una tabla.
-     * @param type $tabla
-     * @return \CBasica
-     */
+    * Obtiene los centros poblados almacenados dentro de 
+    * la base de datos, aplicando un filtro por mun_id.
+    * @param string $criterio, Criterio de filtro de la
+    * consulta, valor default "0".
+    * @return array $centrosPoblados, retorna un arreglo
+    * cn los objetos de tipo /CCentroPoblado y sus respectivos 
+    * atributos. 
+    */
     public function getBasicas($tabla, $criterio = "1") {
         $basicas = null;
         $sql = "SELECT * FROM " . $tabla . " WHERE " . $criterio;
